@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import LiquidControlCenter
 
 @main
@@ -637,7 +638,7 @@ class GlobalOverlayWindow: UIWindow {
     }
     
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        let view = super.hitTest(point, with event: event)
+        let view = super.hitTest(point, with: event)
         // Pass through touches to the view below if it's hitting the transparent background
         return view == self.rootViewController?.view ? nil : view
     }

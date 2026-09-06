@@ -1,0 +1,68 @@
+Command line invocation:
+    /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/usr/bin/xcodebuild -project ControlCenterDemo.xcodeproj -scheme ControlCenterDemo -destination "platform=iOS Simulator,name=iPhone 17"
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  LiquidGlassKit: https://github.com/mohamedsalahnassar/LiquidGlassKit.git @ c1dd227
+  LiquidControlCenter: /Users/mohamednassar/Documents/Xcode-Projects/LiquidControlCenter
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (5 targets)
+    Target 'ControlCenterDemo' in project 'ControlCenterDemo'
+        ➜ Explicit dependency on target 'LiquidControlCenter-product' in project 'LiquidControlCenter'
+    Target 'LiquidControlCenter-product' in project 'LiquidControlCenter'
+        ➜ Explicit dependency on target 'LiquidControlCenter' in project 'LiquidControlCenter'
+        ➜ Explicit dependency on target 'LiquidGlassKit-product' in project 'LiquidGlassKit'
+    Target 'LiquidControlCenter' in project 'LiquidControlCenter'
+        ➜ Explicit dependency on target 'LiquidGlassKit-product' in project 'LiquidGlassKit'
+    Target 'LiquidGlassKit-product' in project 'LiquidGlassKit'
+        ➜ Explicit dependency on target 'LiquidGlassKit' in project 'LiquidGlassKit'
+    Target 'LiquidGlassKit' in project 'LiquidGlassKit' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: d0c4539e61883c66eb9c4fab3b92bff6
+Build description path: /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/XCBuildData/d0c4539e61883c66eb9c4fab3b92bff6.xcbuilddata
+ClangStatCache /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk /Users/mohamednassar/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator27.0-24A5422a-5df208c82a984e2ee2f9d2e45f7337de.sdkstatcache
+    cd /Users/mohamednassar/Documents/Xcode-Projects/LiquidControlCenter/Examples/ControlCenterDemo/ControlCenterDemo.xcodeproj
+    /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -o /Users/mohamednassar/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator27.0-24A5422a-5df208c82a984e2ee2f9d2e45f7337de.sdkstatcache
+
+SwiftDriver ControlCenterDemo normal arm64 com.apple.xcode.tools.swift.compiler (in target 'ControlCenterDemo' from project 'ControlCenterDemo')
+    cd /Users/mohamednassar/Documents/Xcode-Projects/LiquidControlCenter/Examples/ControlCenterDemo
+    builtin-SwiftDriver -- /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name ControlCenterDemo -Onone @/Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/Objects-normal/arm64/ControlCenterDemo.SwiftFileList -DDEBUG -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-27.0.0-beta.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Products/Debug-iphonesimulator -F /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Products/Debug-iphonesimulator -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/mohamednassar/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator27.0-24A5422a-5df208c82a984e2ee2f9d2e45f7337de.sdkstatcache -output-file-map /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/Objects-normal/arm64/ControlCenterDemo-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/mohamednassar/Library/Developer/Xcode/DerivedData/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/Objects-normal/arm64/ControlCenterDemo.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/Objects-normal/arm64/ControlCenterDemo-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/Objects-normal/arm64/ControlCenterDemo_const_extract_protocols.json -Xcc -iquote -Xcc /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/ControlCenterDemo-generated-files.hmap -Xcc -I/Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/ControlCenterDemo-own-target-headers.hmap -Xcc -I/Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/ControlCenterDemo-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo-f2854ee8935cb5cd457ee336d63ed289-VFS-iphonesimulator/all-product-headers.yaml -Xcc -iquote -Xcc /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/ControlCenterDemo-project-headers.hmap -Xcc -I/Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/DerivedSources-normal/arm64 -Xcc -I/Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/DerivedSources/arm64 -Xcc -I/Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ControlCenterDemo.build/Debug-iphonesimulator/ControlCenterDemo.build/Objects-normal/arm64/ControlCenterDemo-Swift.h -working-directory /Users/mohamednassar/Documents/Xcode-Projects/LiquidControlCenter/Examples/ControlCenterDemo -experimental-emit-module-separately -disable-cmo
+/Users/mohamednassar/Documents/Xcode-Projects/LiquidControlCenter/Examples/ControlCenterDemo/App/ControlCenterDemoApp.swift:641:46: error: Expected ',' separator (in target 'ControlCenterDemo' from project 'ControlCenterDemo')
+
+PruneExplicitPrecompiledModules /Users/mohamednassar/Library/Developer/Xcode/DerivedData/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /Users/mohamednassar/Library/Developer/Xcode/DerivedData/ControlCenterDemo-blmukoqaiejnsxeeugdjxdrizfwv/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+** BUILD FAILED **
+
+
+The following build commands failed:
+	SwiftDriver ControlCenterDemo normal arm64 com.apple.xcode.tools.swift.compiler (in target 'ControlCenterDemo' from project 'ControlCenterDemo')
+	Building project ControlCenterDemo with scheme ControlCenterDemo
+(2 failures)
