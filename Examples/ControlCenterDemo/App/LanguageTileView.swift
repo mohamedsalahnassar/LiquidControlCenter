@@ -287,22 +287,27 @@ struct DisclaimerText: View {
 extension ControlTile {
     static func languageTile(languageManager: LanguageManager) -> ControlTile {
         ControlTile("language-switch", size: .wide, label: "Language") { context in
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 Text(languageManager.currentLanguage.flag)
-                    .font(.title)
-                VStack(alignment: .leading) {
+                    .font(.title2)
+                VStack(alignment: .leading, spacing: 2) {
                     Text("Language")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.white.opacity(0.6))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                     Text(languageManager.currentLanguage.title)
-                        .font(.headline)
+                        .font(.subheadline.weight(.semibold))
                         .foregroundColor(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
-                Spacer()
+                Spacer(minLength: 4)
                 Image(systemName: "chevron.right")
+                    .font(.caption)
                     .foregroundColor(.white.opacity(0.5))
             }
-            .padding()
+            .padding(.horizontal, 12)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.white.opacity(0.1))
         }

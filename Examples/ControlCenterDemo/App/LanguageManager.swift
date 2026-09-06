@@ -45,6 +45,8 @@ public enum RevealStyle: String, CaseIterable, Identifiable {
     case curtain = "Curtain Draw"
     case textZoom = "Typography Zoom"
     case iris = "Iris Unveil"
+    case particles = "Particle Burst"
+    case blinds = "Venetian Blinds"
     public var id: String { rawValue }
 }
 

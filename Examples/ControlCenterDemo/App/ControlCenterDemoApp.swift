@@ -584,6 +584,35 @@ struct RevealMaskView: View {
                             .blendMode(.destinationOut)
                     )
                     .compositingGroup()
+            case .particles:
+                Rectangle().fill(Color.black)
+                    .overlay(
+                        ZStack {
+                            ForEach(0..<25, id: \.self) { i in
+                                Circle()
+                                    .frame(width: 20, height: 20)
+                                    .scaleEffect(languageManager.showRevealAnimation ? 80 : 0.01)
+                                    .offset(
+                                        x: languageManager.showRevealAnimation ? cos(Double(i) * 360.0 / 25.0 * .pi / 180) * 800 : 0,
+                                        y: languageManager.showRevealAnimation ? sin(Double(i) * 360.0 / 25.0 * .pi / 180) * 800 : 0
+                                    )
+                                    .blendMode(.destinationOut)
+                            }
+                        }
+                    )
+                    .compositingGroup()
+            case .blinds:
+                Rectangle().fill(Color.black)
+                    .overlay(
+                        HStack(spacing: 0) {
+                            ForEach(0..<12, id: \.self) { i in
+                                Rectangle()
+                                    .scaleEffect(x: languageManager.showRevealAnimation ? 1.1 : 0.001, y: 1)
+                                    .blendMode(.destinationOut)
+                            }
+                        }
+                    )
+                    .compositingGroup()
             }
         }
         .ignoresSafeArea()
