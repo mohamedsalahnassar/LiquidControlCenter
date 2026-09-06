@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "LiquidControlCenter",
-    platforms: [.iOS(.v16)],
+    platforms: [.iOS(.v16), .macOS(.v13)],
     products: [.library(name: "LiquidControlCenter", targets: ["LiquidControlCenter"])],
     dependencies: [
         // Upstream has no release tags. Pin the audited public-API implementation.

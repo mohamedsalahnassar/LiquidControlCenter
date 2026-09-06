@@ -1,0 +1,14 @@
+{
+  "originHash" : "9390e59cbb5f0fda4d66ac87a67e95b336c64abd4da06a3b4067081034b869e4",
+  "pins" : [
+    {
+      "identity" : "liquidglasskit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mohamedsalahnassar/LiquidGlassKit.git",
+      "state" : {
+        "revision" : "c1dd2276164446c1df417f96984749ab8e6d465a"
+      }
+    }
+  ],
+  "version" : 3
+}
