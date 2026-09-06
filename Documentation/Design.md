@@ -25,3 +25,9 @@ Reference media is held locally in ignored `.artifacts/references`, not redistri
 2. Tested grid, configuration, and presentation state.
 3. Full-screen presentation, glass tiles, expansion, and reusable controls.
 4. Runnable sample, simulator validation, and integration documentation.
+
+## User-supplied references (6 September 2026)
+
+The two provided screenshots show both four-column mixed controls and two-column wide controls. The first is the primary appearance target: dark live blur, subtle light rims, white/red selected rotation and silent controls, generous pill radii.
+
+The supplied [iOS 26.1 recording](https://www.reddit.com/r/iOSBeta/comments/1oeneta/ios_261_db4_animation_lags_when_swiping_out_of/) was inspected from the user's local MP4, including 65 ms frame intervals around 3.15–3.87 seconds (opening) and 1.20–1.92 seconds (closing). During opening, controls become legible rapidly, settle with a small positional overshoot, and remain anchored to their grid. The source post concerns residual ghosting during closing; that defect is not an intentional target. Apple’s WWDC video was also sampled for material and expansion behavior. These observations inform tuning; the recording does not expose exact touch input or spring parameters.

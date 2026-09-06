@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 
 /// The footprint of a control in grid cells. Values are bounded to keep layout finite.
 public struct ControlTileSize: Hashable, Sendable, Codable {
@@ -40,9 +41,10 @@ struct GridPlacement: Equatable {
     func frame(cell: CGFloat, spacing: CGFloat, width: CGFloat, rightToLeft: Bool) -> CGRect {
         let widthOfTile = CGFloat(columns) * cell + CGFloat(columns - 1) * spacing
         let x = CGFloat(column) * (cell + spacing)
-        return CGRect(x: rightToLeft ? width - x - widthOfTile : x,
-                      y: CGFloat(row) * (cell + spacing), width: widthOfTile,
-                      height: CGFloat(rows) * cell + CGFloat(rows - 1) * spacing)
+        let originX: CGFloat = rightToLeft ? width - x - widthOfTile : x
+        let originY: CGFloat = CGFloat(row) * (cell + spacing)
+        let height: CGFloat = CGFloat(rows) * cell + CGFloat(rows - 1) * spacing
+        return CGRect(x: originX, y: originY, width: widthOfTile, height: height)
     }
 }
 
@@ -63,7 +65,11 @@ enum ControlCenterGrid {
                 }
             }
             var location: (Int, Int)?
-            if let p = item.position, fits(p.column, p.row) { location = (p.column, p.row) }
+            if let p = item.position {
+                let row = min(512, max(0, p.row))
+                let column = min(11, max(0, p.column))
+                if fits(column, row) { location = (column, row) }
+            }
             if location == nil {
                 search: for row in 0...bottom {
                     for column in 0...(columns - span) where fits(column, row) {

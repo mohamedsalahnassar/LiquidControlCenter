@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 import Testing
 @testable import LiquidControlCenter
 
@@ -58,24 +59,31 @@ struct MotionTests {
     @Test func staleDismissalCannotCloseReopenedCenter() {
         var state = PresentationState()
         let opening = state.request(true)
-        #expect(state.complete(generation: opening))
+        let result1 = state.complete(generation: opening)
+        #expect(result1)
         let closing = state.request(false)
         let reopening = state.request(true)
-        #expect(!state.complete(generation: closing))
+        let result2 = state.complete(generation: closing)
+        #expect(!result2)
         #expect(state.phase == .presenting)
-        #expect(state.complete(generation: reopening))
+        let result3 = state.complete(generation: reopening)
+        #expect(result3)
         #expect(state.phase == .presented)
     }
 
     @Test func dismissDuringPresentationAndIdempotentRequests() {
         var state = PresentationState()
         let first = state.request(true)
-        #expect(state.request(true) == first)
+        let repeated = state.request(true)
+        #expect(repeated == first)
         let closing = state.request(false)
-        #expect(!state.complete(generation: first))
-        #expect(state.complete(generation: closing))
+        let result4 = state.complete(generation: first)
+        #expect(!result4)
+        let result5 = state.complete(generation: closing)
+        #expect(result5)
         #expect(state.phase == .hidden)
-        #expect(!state.complete(generation: closing))
+        let result6 = state.complete(generation: closing)
+        #expect(!result6)
     }
 
     @Test func reducedMotionAndBoundedStagger() {
