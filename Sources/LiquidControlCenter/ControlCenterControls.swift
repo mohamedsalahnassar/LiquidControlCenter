@@ -42,6 +42,7 @@ public struct ControlCenterSlider: View {
     private let tint: Color
     private let onEditingChanged: (Bool) -> Void
     @GestureState private var dragging = false
+    @State private var dragStart: Double?
     @Environment(\.isEnabled) private var isEnabled
 
     public init(_ title: String, value: Binding<Double>, in range: ClosedRange<Double> = 0...1,
@@ -72,10 +73,14 @@ public struct ControlCenterSlider: View {
                 .updating($dragging) { _, state, _ in state = true }
                 .onChanged { gesture in
                     guard isEnabled, geometry.size.height > 0 else { return }
-                    value = ControlValue.value(at: 1 - gesture.location.y / geometry.size.height, in: range)
+                    if dragStart == nil { dragStart = ControlValue.normalized(value, in: range) }
+                    value = ControlValue.value(at: (dragStart ?? 0) - gesture.translation.height / geometry.size.height, in: range)
                 })
         }
-        .onChange(of: dragging) { onEditingChanged($0) }
+        .onChange(of: dragging) { editing in
+            if !editing { dragStart = nil }
+            onEditingChanged(editing)
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
         .accessibilityValue("\(Int(ControlValue.normalized(value, in: range) * 100)) percent")

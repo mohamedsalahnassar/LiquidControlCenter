@@ -1,0 +1,50 @@
+name: ControlCenterDemo
+options:
+  deploymentTarget:
+    iOS: '16.0'
+packages:
+  LiquidControlCenter:
+    path: ../..
+settings:
+  base:
+    SWIFT_VERSION: '6.0'
+    GENERATE_INFOPLIST_FILE: YES
+    CODE_SIGNING_ALLOWED: NO
+    TARGETED_DEVICE_FAMILY: '1,2'
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UISupportedInterfaceOrientations: 'UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight'
+    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: 'UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight'
+targets:
+  ControlCenterDemo:
+    type: application
+    platform: iOS
+    sources: [App]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mohamedsalahnassar.ControlCenterDemo
+        INFOPLIST_KEY_CFBundleDisplayName: Liquid Controls
+    dependencies:
+      - package: LiquidControlCenter
+  ControlCenterDemoTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [../../Tests/LiquidControlCenterTests]
+    dependencies:
+      - target: ControlCenterDemo
+      - package: LiquidControlCenter
+  ControlCenterDemoUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: ControlCenterDemo
+schemes:
+  ControlCenterDemo:
+    build:
+      targets:
+        ControlCenterDemo: all
+    test:
+      gatherCoverageData: true
+      targets:
+        - ControlCenterDemoTests
+        - ControlCenterDemoUITests

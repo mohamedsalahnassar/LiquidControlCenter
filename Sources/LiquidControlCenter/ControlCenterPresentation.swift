@@ -80,7 +80,10 @@ private struct PresentationAnchor: UIViewControllerRepresentable {
         private func root(_ source: PresentationAnchor) -> AnyView {
             AnyView(ControlCenterView(presentation: model, pages: source.pages,
                                       configuration: source.configuration, dismiss: { [weak self] in self?.close() })
-                .environment(\.self, source.environment)
+                // Copy public presentation values, not SwiftUI’s internal hosting environment.
+                .environment(\.layoutDirection, source.environment.layoutDirection)
+                .environment(\.dynamicTypeSize, source.environment.dynamicTypeSize)
+                .environment(\.locale, source.environment.locale)
                 .environment(\.colorScheme, .dark))
         }
 
@@ -114,7 +117,7 @@ private struct PresentationAnchor: UIViewControllerRepresentable {
                     presenter = presented
                 }
                 guard presenter.viewIfLoaded?.window != nil, !presenter.isBeingDismissed,
-                      presenter.transitionCoordinator == nil else { return false }
+                      presenter.transitionCoordinator?.isInteractive != true else { return false }
                 let newHost = CenterHostController(rootView: root(source), configuration: source.configuration)
                 host = newHost
                 _ = state.request(true)

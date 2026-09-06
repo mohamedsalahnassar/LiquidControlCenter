@@ -11,6 +11,13 @@ public struct ControlTileSize: Hashable, Sendable, Codable {
         self.rows = min(12, max(1, rows))
     }
 
+    private enum CodingKeys: String, CodingKey { case columns, rows }
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(columns: try values.decode(Int.self, forKey: .columns),
+                  rows: try values.decode(Int.self, forKey: .rows))
+    }
+
     public static let small = Self(columns: 1, rows: 1)
     public static let wide = Self(columns: 2, rows: 1)
     public static let large = Self(columns: 2, rows: 2)
@@ -25,9 +32,15 @@ public struct ControlTilePosition: Hashable, Sendable, Codable {
         self.column = min(11, max(0, column))
         self.row = min(512, max(0, row))
     }
+    private enum CodingKeys: String, CodingKey { case column, row }
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(column: try values.decode(Int.self, forKey: .column),
+                  row: try values.decode(Int.self, forKey: .row))
+    }
 }
 
-struct GridItem: Equatable {
+struct ControlGridItem: Equatable {
     let size: ControlTileSize
     var position: ControlTilePosition? = nil
 }
@@ -49,7 +62,7 @@ struct GridPlacement: Equatable {
 }
 
 enum ControlCenterGrid {
-    static func placements(for items: [GridItem], columns proposedColumns: Int) -> [GridPlacement] {
+    static func placements(for items: [ControlGridItem], columns proposedColumns: Int) -> [GridPlacement] {
         let columns = min(12, max(1, proposedColumns))
         // Internal cells cannot use the public position initializer's row clamp.
         var cells = Set<Int>()
@@ -91,6 +104,8 @@ enum ControlCenterGrid {
     static func columnCount(requested: Int, width: CGFloat, spacing: CGFloat) -> Int {
         guard width.isFinite, width > 0 else { return 1 }
         let gap = spacing.isFinite ? max(0, spacing) : 12
-        return min(min(12, max(1, requested)), max(1, Int((width + gap) / (44 + gap))))
+        let bounded = min(12, max(1, requested))
+        let fitting = min(CGFloat(bounded), max(1, ((width + gap) / (44 + gap)).rounded(.down)))
+        return Int(fitting)
     }
 }

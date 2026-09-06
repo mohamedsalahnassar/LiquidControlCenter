@@ -8,7 +8,7 @@ final class CenterPresentationModel: ObservableObject {
 }
 
 struct TileLayout: Layout {
-    let items: [GridItem]
+    let items: [ControlGridItem]
     let columns: Int
     let spacing: CGFloat
     let rightToLeft: Bool
@@ -47,6 +47,7 @@ struct ControlCenterView: View {
     @State private var selectedPage: String?
     @State private var expandedID: String?
     @AccessibilityFocusState private var closeFocused: Bool
+    @AccessibilityFocusState private var expandedCloseFocused: Bool
 
     private var uniquePages: [ControlCenterPage] {
         var ids = Set<String>()
@@ -77,9 +78,9 @@ struct ControlCenterView: View {
                 CenterGlassContainer(fallback: configuration.forceFallback) {
                     VStack(spacing: 20) {
                         header
-                        HStack(alignment: .center, spacing: 8) {
+                        ZStack(alignment: .trailing) {
                             ScrollView {
-                                TileLayout(items: tiles.map { GridItem(size: $0.size, position: $0.position) },
+                                TileLayout(items: tiles.map { ControlGridItem(size: $0.size, position: $0.position) },
                                            columns: configuration.columns, spacing: gap,
                                            rightToLeft: layoutDirection == .rightToLeft) {
                                     ForEach(Array(tiles.enumerated()), id: \.element.id) { index, tile in
@@ -87,17 +88,25 @@ struct ControlCenterView: View {
                                     }
                                 }
                                 .padding(4)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    if expandedID != nil { collapse() }
+                                    else if configuration.dismissOnBackgroundTap { dismiss() }
+                                }
                             }
                             .scrollIndicators(.hidden)
                             .scrollDisabled(expandedTile != nil)
-                            if uniquePages.count > 1 { pageRail }
+                            .simultaneousGesture(DragGesture(minimumDistance: 40).onEnded { value in
+                                guard let index = uniquePages.firstIndex(where: { $0.id == currentPage?.id }) else { return }
+                                if abs(value.translation.height) < abs(value.translation.width) {
+                                    let next = index + (value.translation.width < 0 ? 1 : -1)
+                                    if uniquePages.indices.contains(next) { select(uniquePages[next]) }
+                                }
+                            })
                         }
-                        .opacity(expandedTile == nil ? 1 : 0.12)
-                        .blur(radius: expandedTile == nil ? 0 : 5)
-                        .scaleEffect(expandedTile != nil && !reduceMotion ? 0.96 : 1)
                         .allowsHitTesting(expandedTile == nil)
                         .accessibilityHidden(expandedTile != nil)
-                        dismissHandle
                     }
                     .frame(maxWidth: maxWidth)
                     .padding(.horizontal, padding)
@@ -105,10 +114,25 @@ struct ControlCenterView: View {
                     .padding(.bottom, 6)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    if let tile = expandedTile {
+                }
+                .opacity(expandedTile == nil ? 1 : 0.08)
+                .blur(radius: expandedTile == nil ? 0 : 5)
+                .scaleEffect(expandedTile != nil && !reduceMotion ? 0.96 : 1)
+                .allowsHitTesting(expandedTile == nil)
+                .accessibilityHidden(expandedTile != nil)
+
+                if uniquePages.count > 1 && expandedTile == nil {
+                    pageRail
+                        .frame(width: 28)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+
+                // A separate container prevents the enlarged surface from uniting with the grid.
+                if let tile = expandedTile {
+                    CenterGlassContainer(fallback: configuration.forceFallback) {
                         expanded(tile, available: geometry.size)
-                            .zIndex(2)
                     }
+                    .zIndex(2)
                 }
             }
             .foregroundStyle(.white)
@@ -122,8 +146,11 @@ struct ControlCenterView: View {
             if !visible { collapse() }
             else { closeFocused = true }
         }
+        .onChange(of: expandedID) { expandedCloseFocused = $0 != nil }
         .onChange(of: tiles.map(\.id)) { _ in reconcileExpansion() }
         .onChange(of: tiles.map(\.isEnabled)) { _ in reconcileExpansion() }
+        .onChange(of: tiles.map { $0.expandedContent != nil }) { _ in reconcileExpansion() }
+        .onChange(of: currentPage?.id) { _ in collapse() }
     }
 
     private var header: some View {
@@ -147,20 +174,6 @@ struct ControlCenterView: View {
         .accessibilityHidden(expandedTile != nil)
     }
 
-    private var dismissHandle: some View {
-        Button(action: dismiss) {
-            Capsule().fill(.white.opacity(0.65)).frame(width: 110, height: 5)
-                .frame(maxWidth: .infinity).frame(height: 44).contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Dismiss Control Center")
-        .gesture(DragGesture(minimumDistance: 12).onEnded {
-            if $0.translation.height < -35 || $0.predictedEndTranslation.height < -80 { dismiss() }
-        })
-        .opacity(presentation.isVisible ? 1 : 0)
-        .animation(.easeOut(duration: 0.2), value: presentation.isVisible)
-        .accessibilityHidden(expandedTile != nil)
-    }
 
     private var pageRail: some View {
         VStack(spacing: 8) {
@@ -168,7 +181,7 @@ struct ControlCenterView: View {
                 Button { select(page) } label: {
                     Image(systemName: page.systemImage)
                         .font(.system(size: 17, weight: .semibold))
-                        .frame(width: 32, height: 44)
+                        .frame(width: 28, height: 44)
                         .foregroundStyle(.white.opacity(currentPage?.id == page.id ? 1 : 0.4))
                 }
                 .accessibilityLabel(page.title)
@@ -186,11 +199,11 @@ struct ControlCenterView: View {
 
     @ViewBuilder
     private func tileCell(_ tile: ControlTile, index: Int) -> some View {
-        if expandedID == tile.id {
+        if expandedTile?.id == tile.id {
             Color.clear
         } else {
             compact(tile)
-                .matchedGeometryEffect(id: tile.id, in: tileNamespace)
+                .matchedGeometryEffect(id: tile.id, in: tileNamespace, properties: reduceMotion ? [] : .frame)
                 .opacity(presentation.isVisible ? 1 : 0)
                 .scaleEffect(presentation.isVisible || reduceMotion ? 1 : 0.86, anchor: .topTrailing)
                 .offset(y: presentation.isVisible || reduceMotion ? 0 : -22)
@@ -216,7 +229,7 @@ struct ControlCenterView: View {
             .padding(24)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .modifier(GlassSurface(radius: 44, tint: tile.tint, fallback: configuration.forceFallback))
-            .matchedGeometryEffect(id: tile.id, in: tileNamespace)
+            .matchedGeometryEffect(id: tile.id, in: tileNamespace, properties: reduceMotion ? [] : .frame)
             .frame(height: min(tile.expandedHeight, max(120, available.height - 160)))
             .accessibilityIdentifier("control-expanded.\(tile.id)")
             Button(action: collapse) {
@@ -226,6 +239,7 @@ struct ControlCenterView: View {
             }
             .buttonStyle(ControlPressStyle())
             .accessibilityLabel("Collapse \(tile.accessibilityLabel)")
+            .accessibilityFocused($expandedCloseFocused)
         }
         .frame(width: max(120, min(maxWidth - 16, available.width - 48)))
         .transition(.opacity)
@@ -254,27 +268,29 @@ private struct TileInteraction: View {
     let fallback: Bool
 
     private var face: some View {
-        tile.content(context)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-            .modifier(GlassSurface(radius: radius, tint: tile.tint, fallback: fallback))
-            .contentShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        GeometryReader { geometry in
+            tile.content(context)
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        }
+        .modifier(GlassSurface(radius: radius, tint: tile.tint, fallback: fallback))
+        .contentShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
     }
     private var radius: CGFloat { tile.size == .small || tile.size == .wide || tile.size == .tall ? 100 : 34 }
 
     var body: some View {
         Group {
-            if let action = tile.action {
+            if tile.isCustomView {
+                tile.content(context)
+            } else if let action = tile.action {
                 Button(action: action) { face }
                     .buttonStyle(ControlPressStyle())
                     .accessibilityLabel(tile.accessibilityLabel)
-            } else if tile.expandedContent != nil {
-                face
             } else {
                 face
             }
         }
-        .simultaneousGesture(LongPressGesture(minimumDuration: 0.38).onEnded { _ in
+        .highPriorityGesture(LongPressGesture(minimumDuration: 0.38).onEnded { _ in
             if tile.expandedContent != nil { context.expand() }
         }, including: tile.expandedContent != nil ? .all : .none)
         .accessibilityAction(named: Text("Expand \(tile.accessibilityLabel)")) { context.expand() }

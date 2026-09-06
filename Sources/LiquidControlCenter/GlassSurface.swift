@@ -24,7 +24,7 @@ struct GlassSurface: ViewModifier {
                 content.background(.ultraThinMaterial, in: shape)
                     .background((tint ?? .clear).opacity(0.35), in: shape)
             } else {
-                content.liquidGlassEffect(.regular.tint(tint).interactive(false), in: shape)
+                content.liquidGlassEffect(.regular.tint(tint ?? .white.opacity(0.12)).interactive(false), in: shape)
             }
         }
         .overlay {
@@ -38,11 +38,7 @@ struct CenterGlassContainer<Content: View>: View {
     var fallback: Bool
     @ViewBuilder var content: Content
     var body: some View {
-        if #available(iOS 26, *), !fallback {
-            GlassEffectContainer(spacing: 8) { content }
-        } else {
-            content
-        }
+        ZStack { content }
     }
 }
 

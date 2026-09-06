@@ -10,6 +10,7 @@ public struct ControlTile: Identifiable {
     public var tint: Color?
     public var isEnabled: Bool
     public var accessibilityLabel: String
+    public var isCustomView: Bool
     var content: (ControlTileContext) -> AnyView
     var expandedContent: ((ControlTileContext) -> AnyView)?
     var action: (() -> Void)?
@@ -19,6 +20,7 @@ public struct ControlTile: Identifiable {
     public init<Content: View>(
         _ id: String, size: ControlTileSize = .small, position: ControlTilePosition? = nil,
         label: String, tint: Color? = nil, isEnabled: Bool = true,
+        isCustomView: Bool = false,
         action: (() -> Void)? = nil,
         @ViewBuilder content: @escaping (ControlTileContext) -> Content
     ) {
@@ -28,6 +30,7 @@ public struct ControlTile: Identifiable {
         self.accessibilityLabel = label
         self.tint = tint
         self.isEnabled = isEnabled
+        self.isCustomView = isCustomView
         self.action = action
         self.content = { AnyView(content($0)) }
         self.expandedHeight = 360
