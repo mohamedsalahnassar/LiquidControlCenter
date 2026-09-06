@@ -37,6 +37,7 @@ public enum SwitcherStyle: String, CaseIterable, Identifiable {
     case hold = "Liquid Press & Hold"
     case flip = "3D Card Flip"
     case pillToggle = "Pill Toggle"
+    case expandCircle = "Expand Circle"
     public var id: String { rawValue }
 }
 

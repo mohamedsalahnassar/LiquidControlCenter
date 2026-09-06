@@ -26,6 +26,8 @@ struct LanguageExpandedView: View {
                 FlipSwitcher(context: context)
             case .pillToggle:
                 PillToggleSwitcher(context: context)
+            case .expandCircle:
+                ExpandCircleSwitcher(context: context)
             }
         }
         .padding()
@@ -384,6 +386,73 @@ struct PillToggleSwitcher: View {
     
     private func triggerChange() async {
         try? await Task.sleep(nanoseconds: 800_000_000)
+        context.dismiss()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        await languageManager.switchLanguage(to: languageManager.currentLanguage.other)
+    }
+}
+
+// MARK: - Expand Circle Switcher
+struct ExpandCircleSwitcher: View {
+    let context: ControlTileContext
+    @EnvironmentObject var languageManager: LanguageManager
+    
+    @State private var scale: CGFloat = 1.0
+    @State private var isPressing = false
+    @State private var isConfirmed = false
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.1))
+                    .frame(width: 120, height: 120)
+                
+                Circle()
+                    .fill(Color.blue)
+                    .frame(width: 120, height: 120)
+                    .scaleEffect(scale)
+                    .opacity(isPressing ? 0.8 : 0)
+                
+                Text(languageManager.currentLanguage.other.flag)
+                    .font(.system(size: 40))
+                    .scaleEffect(scale > 1 ? min(scale, 1.5) : 1)
+            }
+            .gesture(
+                LongPressGesture(minimumDuration: 1.0, maximumDistance: 50)
+                    .onChanged { _ in
+                        guard !isConfirmed else { return }
+                        isPressing = true
+                        withAnimation(.easeIn(duration: 1.0)) {
+                            scale = 15.0
+                        }
+                    }
+                    .onEnded { _ in
+                        guard !isConfirmed else { return }
+                        isConfirmed = true
+                        Task { await triggerChange() }
+                    }
+            )
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onEnded { _ in
+                        guard !isConfirmed else { return }
+                        isPressing = false
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            scale = 1.0
+                        }
+                    }
+            )
+            
+            Text("Press and hold to switch")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.6))
+            
+            DisclaimerText(visible: scale > 1.2)
+        }
+    }
+    
+    private func triggerChange() async {
         context.dismiss()
         try? await Task.sleep(nanoseconds: 300_000_000)
         await languageManager.switchLanguage(to: languageManager.currentLanguage.other)
