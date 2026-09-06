@@ -546,46 +546,44 @@ struct RevealMaskView: View {
     
     var body: some View {
         ZStack {
-            if !languageManager.showRevealAnimation {
+            switch languageManager.revealStyle {
+            case .ripple:
+                // Ripple expands a soft-edged hole in the mask
                 Rectangle().fill(Color.black)
-            } else {
-                switch languageManager.revealStyle {
-                case .ripple:
-                    // Ripple expands a hole in the mask
-                    Rectangle().fill(Color.black)
-                        .overlay(
-                            Circle()
-                                .scaleEffect(50)
-                                .blendMode(.destinationOut)
-                        )
-                        .compositingGroup()
-                case .curtain:
-                    HStack(spacing: 0) {
-                        Rectangle()
-                            .fill(Color.black)
-                            .offset(x: -UIScreen.main.bounds.width)
-                        Rectangle()
-                            .fill(Color.black)
-                            .offset(x: UIScreen.main.bounds.width)
-                    }
-                case .textZoom:
-                    Rectangle().fill(Color.black)
-                        .overlay(
-                            Text(languageManager.currentLanguage.title)
-                                .font(.system(size: 100, weight: .black))
-                                .scaleEffect(100)
-                                .blendMode(.destinationOut)
-                        )
-                        .compositingGroup()
-                case .iris:
-                    Rectangle().fill(Color.black)
-                        .overlay(
-                            Circle()
-                                .scaleEffect(50)
-                                .blendMode(.destinationOut)
-                        )
-                        .compositingGroup()
+                    .overlay(
+                        Circle()
+                            .scaleEffect(languageManager.showRevealAnimation ? 50 : 0)
+                            .blur(radius: 40)
+                            .blendMode(.destinationOut)
+                    )
+                    .compositingGroup()
+            case .curtain:
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(Color.black)
+                        .offset(x: languageManager.showRevealAnimation ? -UIScreen.main.bounds.width : 0)
+                    Rectangle()
+                        .fill(Color.black)
+                        .offset(x: languageManager.showRevealAnimation ? UIScreen.main.bounds.width : 0)
                 }
+            case .textZoom:
+                Rectangle().fill(Color.black)
+                    .overlay(
+                        Text(languageManager.currentLanguage.title)
+                            .font(.system(size: 100, weight: .black))
+                            .scaleEffect(languageManager.showRevealAnimation ? 150 : 0.01)
+                            .blendMode(.destinationOut)
+                    )
+                    .compositingGroup()
+            case .iris:
+                // Iris is a sharp-edged circle
+                Rectangle().fill(Color.black)
+                    .overlay(
+                        Circle()
+                            .scaleEffect(languageManager.showRevealAnimation ? 50 : 0)
+                            .blendMode(.destinationOut)
+                    )
+                    .compositingGroup()
             }
         }
         .ignoresSafeArea()
