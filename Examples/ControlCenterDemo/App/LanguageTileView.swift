@@ -397,7 +397,6 @@ struct ExpandCircleSwitcher: View {
     let context: ControlTileContext
     @EnvironmentObject var languageManager: LanguageManager
     
-    @State private var scale: CGFloat = 1.0
     @State private var isPressing = false
     @State private var isConfirmed = false
     
@@ -411,20 +410,33 @@ struct ExpandCircleSwitcher: View {
                 Circle()
                     .fill(Color.blue)
                     .frame(width: 120, height: 120)
-                    .scaleEffect(scale)
+                    .scaleEffect(languageManager.expandCircleScale)
                     .opacity(isPressing ? 0.8 : 0)
                 
                 Text(languageManager.currentLanguage.other.flag)
                     .font(.system(size: 40))
-                    .scaleEffect(scale > 1 ? min(scale, 1.5) : 1)
+                    .scaleEffect(languageManager.expandCircleScale > 1 ? min(languageManager.expandCircleScale, 1.5) : 1)
             }
+            .background(
+                GeometryReader { geo in
+                    Color.clear
+                        .onAppear {
+                            // Convert tile center to global coordinate for the expanding circle
+                            let frame = geo.frame(in: .global)
+                            languageManager.expandCircleCenter = CGPoint(x: frame.midX, y: frame.midY)
+                        }
+                        .onChange(of: geo.frame(in: .global)) { frame in
+                            languageManager.expandCircleCenter = CGPoint(x: frame.midX, y: frame.midY)
+                        }
+                }
+            )
             .gesture(
                 LongPressGesture(minimumDuration: 1.0, maximumDistance: 50)
                     .onChanged { _ in
                         guard !isConfirmed else { return }
                         isPressing = true
                         withAnimation(.easeIn(duration: 1.0)) {
-                            scale = 15.0
+                            languageManager.expandCircleScale = 15.0
                         }
                     }
                     .onEnded { _ in
@@ -439,7 +451,7 @@ struct ExpandCircleSwitcher: View {
                         guard !isConfirmed else { return }
                         isPressing = false
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            scale = 1.0
+                            languageManager.expandCircleScale = 1.0
                         }
                     }
             )
@@ -448,7 +460,7 @@ struct ExpandCircleSwitcher: View {
                 .font(.caption)
                 .foregroundColor(.white.opacity(0.6))
             
-            DisclaimerText(visible: scale > 1.2)
+            DisclaimerText(visible: languageManager.expandCircleScale > 1.2)
         }
     }
     

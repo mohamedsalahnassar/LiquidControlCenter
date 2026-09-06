@@ -64,8 +64,12 @@ public class LanguageManager: ObservableObject {
     public static let shared = LanguageManager()
     
     @Published public var currentLanguage: AppLanguage = .english
-    @Published public var switcherStyle: SwitcherStyle = .slide
-    @Published public var revealStyle: RevealStyle = .ripple
+    @Published public var switcherStyle: SwitcherStyle = .expandCircle
+    @Published public var revealStyle: RevealStyle = .particles
+    
+    // Global state for Expand Circle variation
+    @Published public var expandCircleScale: CGFloat = 1.0
+    @Published public var expandCircleCenter: CGPoint = CGPoint(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY)
     @Published public var loaderStyle: LoaderStyle = .pulse
     
     @Published public var isReloading: Bool = false

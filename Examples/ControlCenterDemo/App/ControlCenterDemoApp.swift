@@ -156,6 +156,7 @@ struct DemoScreen: View {
         .environmentObject(languageManager)
         .preferredColorScheme(.dark)
         .task {
+            GlobalOverlayWindow.shared.setup(languageManager: languageManager)
             if ProcessInfo.processInfo.arguments.contains("--show-control-center") { presented = true }
         }
     }
@@ -616,5 +617,46 @@ struct RevealMaskView: View {
             }
         }
         .ignoresSafeArea()
+    }
+}
+
+// MARK: - Global Overlay Window for Expand Circle
+class GlobalOverlayWindow: UIWindow {
+    static let shared = GlobalOverlayWindow()
+    
+    func setup(languageManager: LanguageManager) {
+        guard let scene = UIApplication.shared.connectedScenes.first(where: { $0 is UIWindowScene }) as? UIWindowScene else { return }
+        self.windowScene = scene
+        self.windowLevel = .alert + 1
+        self.backgroundColor = .clear
+        
+        let host = UIHostingController(rootView: GlobalExpandCircleOverlay().environmentObject(languageManager))
+        host.view.backgroundColor = .clear
+        self.rootViewController = host
+        self.isHidden = false
+    }
+    
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let view = super.hitTest(point, with event: event)
+        // Pass through touches to the view below if it's hitting the transparent background
+        return view == self.rootViewController?.view ? nil : view
+    }
+}
+
+struct GlobalExpandCircleOverlay: View {
+    @EnvironmentObject var languageManager: LanguageManager
+    
+    var body: some View {
+        ZStack {
+            if languageManager.expandCircleScale > 1.01 {
+                Circle()
+                    .fill(Color.blue.opacity(0.8))
+                    .frame(width: 120, height: 120)
+                    .scaleEffect(languageManager.expandCircleScale)
+                    .position(languageManager.expandCircleCenter)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
+        }
     }
 }
