@@ -143,15 +143,26 @@ struct DemoScreen: View {
             if languageManager.isReloading {
                 ZStack {
                     Color.black.ignoresSafeArea()
-                    VStack(spacing: 24) {
-                        ProgressView()
-                            .scaleEffect(1.5)
-                            .tint(.white)
-                        Text(languageManager.loadingMessage)
-                            .font(.headline)
+                    
+                    // Animated background pulse
+                    Circle()
+                        .fill(Color.blue.opacity(0.1))
+                        .scaleEffect(languageManager.isReloading ? 2.0 : 0.5)
+                        .opacity(languageManager.isReloading ? 0 : 1)
+                        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: false), value: languageManager.isReloading)
+                    
+                    VStack(spacing: 32) {
+                        Image(systemName: "globe")
+                            .font(.system(size: 60))
                             .foregroundColor(.white)
-                            .transition(.opacity)
-                            .id(languageManager.loadingMessage) // forces transition on text change
+                            .scaleEffect(languageManager.isReloading ? 1.1 : 0.9)
+                            .animation(.easeInOut(duration: 1).repeatForever(), value: languageManager.isReloading)
+                            
+                        Text(languageManager.loadingMessage)
+                            .font(.title3.weight(.medium))
+                            .foregroundColor(.white)
+                            .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .move(edge: .top).combined(with: .opacity)))
+                            .id(languageManager.loadingMessage)
                     }
                 }
                 .transition(.opacity)
@@ -162,11 +173,43 @@ struct DemoScreen: View {
             if languageManager.showRevealAnimation {
                 ZStack {
                     Color.black.ignoresSafeArea()
-                    Circle()
-                        .fill(Color.blue)
-                        .scaleEffect(languageManager.showRevealAnimation ? 50 : 0)
-                        .opacity(languageManager.showRevealAnimation ? 0 : 1)
-                        .animation(.easeOut(duration: 0.8), value: languageManager.showRevealAnimation)
+                    
+                    switch languageManager.revealStyle {
+                    case .ripple:
+                        Circle()
+                            .fill(Color.blue)
+                            .scaleEffect(languageManager.showRevealAnimation ? 50 : 0)
+                            .opacity(languageManager.showRevealAnimation ? 0 : 1)
+                            .animation(.easeOut(duration: 0.8), value: languageManager.showRevealAnimation)
+                    case .curtain:
+                        HStack(spacing: 0) {
+                            Rectangle()
+                                .fill(Color.black)
+                                .offset(x: languageManager.showRevealAnimation ? -500 : 0)
+                            Rectangle()
+                                .fill(Color.black)
+                                .offset(x: languageManager.showRevealAnimation ? 500 : 0)
+                        }
+                        .animation(.easeInOut(duration: 0.8), value: languageManager.showRevealAnimation)
+                    case .textZoom:
+                        Text(languageManager.currentLanguage.title)
+                            .font(.system(size: 80, weight: .black))
+                            .foregroundColor(.white)
+                            .scaleEffect(languageManager.showRevealAnimation ? 100 : 1)
+                            .opacity(languageManager.showRevealAnimation ? 0 : 1)
+                            .animation(.easeIn(duration: 0.8), value: languageManager.showRevealAnimation)
+                    case .iris:
+                        Color.black.ignoresSafeArea()
+                            .mask {
+                                Rectangle()
+                                    .overlay(
+                                        Circle()
+                                            .scaleEffect(languageManager.showRevealAnimation ? 50 : 0)
+                                            .blendMode(.destinationOut)
+                                    )
+                            }
+                            .animation(.easeOut(duration: 0.8), value: languageManager.showRevealAnimation)
+                    }
                 }
                 .ignoresSafeArea()
                 .zIndex(101)
@@ -427,6 +470,18 @@ struct DemoScreen: View {
                     VStack(alignment: .leading) {
                         Text("Dimming Opacity: \(String(format: "%.2f", dimmingOpacity))")
                         Slider(value: $dimmingOpacity, in: 0...1, step: 0.05)
+                    }
+                }
+                Section("Creative Options") {
+                    Picker("Language Switcher Style", selection: $languageManager.switcherStyle) {
+                        ForEach(SwitcherStyle.allCases) { style in
+                            Text(style.rawValue).tag(style)
+                        }
+                    }
+                    Picker("Reveal Animation", selection: $languageManager.revealStyle) {
+                        ForEach(RevealStyle.allCases) { style in
+                            Text(style.rawValue).tag(style)
+                        }
                     }
                 }
                 Section {

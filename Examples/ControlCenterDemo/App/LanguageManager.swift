@@ -31,11 +31,30 @@ public enum AppLanguage: String, CaseIterable {
     }
 }
 
+public enum SwitcherStyle: String, CaseIterable, Identifiable {
+    case slide = "Slide to Translate"
+    case orbit = "Yin-Yang Orbit"
+    case hold = "Liquid Press & Hold"
+    case flip = "3D Card Flip"
+    public var id: String { rawValue }
+}
+
+public enum RevealStyle: String, CaseIterable, Identifiable {
+    case ripple = "Liquid Ripple"
+    case curtain = "Curtain Draw"
+    case textZoom = "Typography Zoom"
+    case iris = "Iris Unveil"
+    public var id: String { rawValue }
+}
+
 @MainActor
 public class LanguageManager: ObservableObject {
     public static let shared = LanguageManager()
     
     @Published public var currentLanguage: AppLanguage = .english
+    @Published public var switcherStyle: SwitcherStyle = .slide
+    @Published public var revealStyle: RevealStyle = .ripple
+    
     @Published public var isReloading: Bool = false
     @Published public var showRevealAnimation: Bool = false
     @Published public var loadingMessage: String = ""

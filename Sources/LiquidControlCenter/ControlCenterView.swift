@@ -288,6 +288,9 @@ private struct TileInteraction: View {
                     .accessibilityLabel(tile.accessibilityLabel)
             } else {
                 face
+                    .onTapGesture {
+                        if tile.expandedContent != nil { context.expand() }
+                    }
             }
         }
         .highPriorityGesture(LongPressGesture(minimumDuration: 0.38).onEnded { _ in
