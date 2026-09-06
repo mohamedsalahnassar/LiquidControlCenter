@@ -149,24 +149,10 @@ struct DemoScreen: View {
                         .fill(Color.blue.opacity(0.1))
                         .scaleEffect(languageManager.isReloading ? 2.0 : 0.5)
                         .opacity(languageManager.isReloading ? 0 : 1)
-                        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: false), value: languageManager.isReloading)
-                    
-                    VStack(spacing: 32) {
-                        Image(systemName: "globe")
-                            .font(.system(size: 60))
-                            .foregroundColor(.white)
-                            .scaleEffect(languageManager.isReloading ? 1.1 : 0.9)
-                            .animation(.easeInOut(duration: 1).repeatForever(), value: languageManager.isReloading)
-                            
-                        Text(languageManager.loadingMessage)
-                            .font(.title3.weight(.medium))
-                            .foregroundColor(.white)
-                            .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .move(edge: .top).combined(with: .opacity)))
-                            .id(languageManager.loadingMessage)
-                    }
-                }
-                .transition(.opacity)
-                .zIndex(100)
+                FullScreenLoaderView()
+                    .environmentObject(languageManager)
+                    .transition(.opacity)
+                    .zIndex(100)
             }
             
             // Reveal Animation
@@ -484,6 +470,23 @@ struct DemoScreen: View {
                         }
                     }
                 }
+                Section("Creative Options") {
+                    Picker("Language Switcher Style", selection: $languageManager.switcherStyle) {
+                        ForEach(SwitcherStyle.allCases) { style in
+                            Text(style.rawValue).tag(style)
+                        }
+                    }
+                    Picker("Loader Style", selection: $languageManager.loaderStyle) {
+                        ForEach(LoaderStyle.allCases) { style in
+                            Text(style.rawValue).tag(style)
+                        }
+                    }
+                    Picker("Reveal Animation", selection: $languageManager.revealStyle) {
+                        ForEach(RevealStyle.allCases) { style in
+                            Text(style.rawValue).tag(style)
+                        }
+                    }
+                }
                 Section {
                     Text("All controls in this sample use local app state. The same bindings drive the tiles, expanded views, and dashboard.")
                 }
@@ -491,5 +494,94 @@ struct DemoScreen: View {
             .navigationTitle("Demo settings")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showSettings = false } } }
         }
+    }
+}
+
+struct FullScreenLoaderView: View {
+    @EnvironmentObject var languageManager: LanguageManager
+    @State private var animate = false
+    
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            switch languageManager.loaderStyle {
+            case .pulse:
+                pulseGlobe
+            case .rotatingFlags:
+                rotatingFlags
+            case .matrix:
+                translationMatrix
+            case .morphing:
+                liquidMorph
+            }
+            
+            VStack {
+                Spacer()
+                Text(languageManager.loadingMessage)
+                    .font(.title3.weight(.medium))
+                    .foregroundColor(.white)
+                    .padding(.bottom, 60)
+                    .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .move(edge: .top).combined(with: .opacity)))
+                    .id(languageManager.loadingMessage)
+            }
+        }
+        .onAppear { animate = true }
+    }
+    
+    private var pulseGlobe: some View {
+        ZStack {
+            Circle()
+                .fill(Color.blue.opacity(0.1))
+                .scaleEffect(animate ? 2.0 : 0.5)
+                .opacity(animate ? 0 : 1)
+                .animation(.easeInOut(duration: 2).repeatForever(autoreverses: false), value: animate)
+            
+            Image(systemName: "globe")
+                .font(.system(size: 60))
+                .foregroundColor(.white)
+                .scaleEffect(animate ? 1.1 : 0.9)
+                .animation(.easeInOut(duration: 1).repeatForever(), value: animate)
+        }
+    }
+    
+    private var rotatingFlags: some View {
+        ZStack {
+            Text(AppLanguage.english.flag)
+                .font(.system(size: 50))
+                .offset(y: -40)
+            Text(AppLanguage.arabic.flag)
+                .font(.system(size: 50))
+                .offset(y: 40)
+        }
+        .rotationEffect(.degrees(animate ? 360 : 0))
+        .animation(.linear(duration: 2).repeatForever(autoreverses: false), value: animate)
+    }
+    
+    private var translationMatrix: some View {
+        HStack(spacing: 20) {
+            ForEach(0..<5) { i in
+                Text(animate ? "A" : "ع")
+                    .font(.system(size: 40, weight: .bold))
+                    .foregroundColor(.green.opacity(animate ? 1 : 0.2))
+                    .animation(.easeInOut(duration: 0.5).repeatForever().delay(Double(i) * 0.1), value: animate)
+            }
+        }
+    }
+    
+    private var liquidMorph: some View {
+        ZStack {
+            Circle()
+                .fill(Color.cyan)
+                .frame(width: 80, height: 80)
+                .offset(x: animate ? -30 : 30)
+            
+            Circle()
+                .fill(Color.indigo)
+                .frame(width: 80, height: 80)
+                .offset(x: animate ? 30 : -30)
+                .blendMode(.screen)
+        }
+        .animation(.easeInOut(duration: 1.2).repeatForever(), value: animate)
     }
 }

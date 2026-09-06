@@ -93,7 +93,7 @@ struct SlideSwitcher: View {
     }
     
     private func triggerChange() async {
-        context.collapse()
+        context.dismiss()
         try? await Task.sleep(nanoseconds: 300_000_000)
         await languageManager.switchLanguage(to: languageManager.currentLanguage.other)
     }
@@ -134,7 +134,7 @@ struct OrbitSwitcher: View {
     
     private func triggerChange() async {
         try? await Task.sleep(nanoseconds: 800_000_000)
-        context.collapse()
+        context.dismiss()
         try? await Task.sleep(nanoseconds: 300_000_000)
         await languageManager.switchLanguage(to: languageManager.currentLanguage.other)
     }
@@ -209,7 +209,7 @@ struct HoldSwitcher: View {
     
     private func triggerChange() async {
         try? await Task.sleep(nanoseconds: 500_000_000)
-        context.collapse()
+        context.dismiss()
         try? await Task.sleep(nanoseconds: 300_000_000)
         await languageManager.switchLanguage(to: languageManager.currentLanguage.other)
     }
@@ -248,7 +248,7 @@ struct FlipSwitcher: View {
     
     private func triggerChange() async {
         try? await Task.sleep(nanoseconds: 800_000_000)
-        context.collapse()
+        context.dismiss()
         try? await Task.sleep(nanoseconds: 300_000_000)
         await languageManager.switchLanguage(to: languageManager.currentLanguage.other)
     }

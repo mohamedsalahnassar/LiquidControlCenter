@@ -47,6 +47,14 @@ public enum RevealStyle: String, CaseIterable, Identifiable {
     public var id: String { rawValue }
 }
 
+public enum LoaderStyle: String, CaseIterable, Identifiable {
+    case pulse = "Pulse Globe"
+    case rotatingFlags = "Rotating Flags"
+    case matrix = "Translation Matrix"
+    case morphing = "Liquid Morph"
+    public var id: String { rawValue }
+}
+
 @MainActor
 public class LanguageManager: ObservableObject {
     public static let shared = LanguageManager()
@@ -54,6 +62,7 @@ public class LanguageManager: ObservableObject {
     @Published public var currentLanguage: AppLanguage = .english
     @Published public var switcherStyle: SwitcherStyle = .slide
     @Published public var revealStyle: RevealStyle = .ripple
+    @Published public var loaderStyle: LoaderStyle = .pulse
     
     @Published public var isReloading: Bool = false
     @Published public var showRevealAnimation: Bool = false
