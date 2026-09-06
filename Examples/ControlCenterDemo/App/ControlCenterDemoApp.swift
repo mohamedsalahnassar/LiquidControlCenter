@@ -145,14 +145,12 @@ struct DemoScreen: View {
             if languageManager.isReloading {
                 FullScreenLoaderView()
                     .environmentObject(languageManager)
-                    .transition(.opacity)
+                    // Do not use .opacity transition here because it would conflict with the mask animation
                     .zIndex(100)
-            }
-            
-            // Reveal Animation
-            if languageManager.showRevealAnimation {
-                RevealAnimationView()
-                    .zIndex(101)
+                    .mask {
+                        RevealMaskView()
+                            .environmentObject(languageManager)
+                    }
             }
         }
         .environmentObject(languageManager)
@@ -543,52 +541,53 @@ struct FullScreenLoaderView: View {
     }
 }
 
-struct RevealAnimationView: View {
+struct RevealMaskView: View {
     @EnvironmentObject var languageManager: LanguageManager
-    @State private var animate = false
     
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
-            
-            switch languageManager.revealStyle {
-            case .ripple:
-                Circle()
-                    .fill(Color.blue)
-                    .scaleEffect(animate ? 50 : 0)
-                    .opacity(animate ? 0 : 1)
-            case .curtain:
-                HStack(spacing: 0) {
-                    Rectangle()
-                        .fill(Color.black)
-                        .offset(x: animate ? -500 : 0)
-                    Rectangle()
-                        .fill(Color.black)
-                        .offset(x: animate ? 500 : 0)
-                }
-            case .textZoom:
-                Text(languageManager.currentLanguage.title)
-                    .font(.system(size: 80, weight: .black))
-                    .foregroundColor(.white)
-                    .scaleEffect(animate ? 100 : 1)
-                    .opacity(animate ? 0 : 1)
-            case .iris:
-                Color.black.ignoresSafeArea()
-                    .mask {
+            if !languageManager.showRevealAnimation {
+                Rectangle().fill(Color.black)
+            } else {
+                switch languageManager.revealStyle {
+                case .ripple:
+                    // Ripple expands a hole in the mask
+                    Rectangle().fill(Color.black)
+                        .overlay(
+                            Circle()
+                                .scaleEffect(50)
+                                .blendMode(.destinationOut)
+                        )
+                        .compositingGroup()
+                case .curtain:
+                    HStack(spacing: 0) {
                         Rectangle()
-                            .overlay(
-                                Circle()
-                                    .scaleEffect(animate ? 50 : 0)
-                                    .blendMode(.destinationOut)
-                            )
+                            .fill(Color.black)
+                            .offset(x: -UIScreen.main.bounds.width)
+                        Rectangle()
+                            .fill(Color.black)
+                            .offset(x: UIScreen.main.bounds.width)
                     }
+                case .textZoom:
+                    Rectangle().fill(Color.black)
+                        .overlay(
+                            Text(languageManager.currentLanguage.title)
+                                .font(.system(size: 100, weight: .black))
+                                .scaleEffect(100)
+                                .blendMode(.destinationOut)
+                        )
+                        .compositingGroup()
+                case .iris:
+                    Rectangle().fill(Color.black)
+                        .overlay(
+                            Circle()
+                                .scaleEffect(50)
+                                .blendMode(.destinationOut)
+                        )
+                        .compositingGroup()
+                }
             }
         }
-        .animation(.easeInOut(duration: 0.8), value: animate)
         .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .onAppear {
-            animate = true
-        }
     }
 }

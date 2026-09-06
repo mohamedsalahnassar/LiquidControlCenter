@@ -90,14 +90,16 @@ public class LanguageManager: ObservableObject {
         
         currentLanguage = newLanguage
         
-        // Trigger reveal animation
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+        // Trigger reveal animation (loader stays on screen but its mask animates away)
+        withAnimation(.spring(response: 0.8, dampingFraction: 0.85)) {
             showRevealAnimation = true
-            isReloading = false
         }
         
-        // Reset reveal state after animation finishes
+        // Wait for reveal animation to finish
         try? await Task.sleep(nanoseconds: 1_000_000_000)
+        
+        // Remove from hierarchy without opacity animation because it's already masked out
+        isReloading = false
         showRevealAnimation = false
     }
 }
