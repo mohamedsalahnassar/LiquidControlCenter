@@ -141,14 +141,6 @@ struct DemoScreen: View {
             
             // Full Screen Loader
             if languageManager.isReloading {
-                ZStack {
-                    Color.black.ignoresSafeArea()
-                    
-                    // Animated background pulse
-                    Circle()
-                        .fill(Color.blue.opacity(0.1))
-                        .scaleEffect(languageManager.isReloading ? 2.0 : 0.5)
-                        .opacity(languageManager.isReloading ? 0 : 1)
                 FullScreenLoaderView()
                     .environmentObject(languageManager)
                     .transition(.opacity)
@@ -470,23 +462,7 @@ struct DemoScreen: View {
                         }
                     }
                 }
-                Section("Creative Options") {
-                    Picker("Language Switcher Style", selection: $languageManager.switcherStyle) {
-                        ForEach(SwitcherStyle.allCases) { style in
-                            Text(style.rawValue).tag(style)
-                        }
-                    }
-                    Picker("Loader Style", selection: $languageManager.loaderStyle) {
-                        ForEach(LoaderStyle.allCases) { style in
-                            Text(style.rawValue).tag(style)
-                        }
-                    }
-                    Picker("Reveal Animation", selection: $languageManager.revealStyle) {
-                        ForEach(RevealStyle.allCases) { style in
-                            Text(style.rawValue).tag(style)
-                        }
-                    }
-                }
+
                 Section {
                     Text("All controls in this sample use local app state. The same bindings drive the tiles, expanded views, and dashboard.")
                 }
