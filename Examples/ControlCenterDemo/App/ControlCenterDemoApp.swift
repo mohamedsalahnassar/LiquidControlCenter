@@ -60,8 +60,9 @@ struct DemoScreen: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
+        ZStack {
+            NavigationStack {
+                ZStack {
                 wallpaper
                 ScrollView {
                     VStack(alignment: .leading, spacing: 30) {
@@ -138,6 +139,7 @@ struct DemoScreen: View {
                     Button("Done") { showCamera = false }.buttonStyle(.borderedProminent)
                 }.padding(32)
             }
+            } // Close NavigationStack here
             
             // Full Screen Loader
             if languageManager.isReloading {
@@ -456,6 +458,11 @@ struct DemoScreen: View {
                             Text(style.rawValue).tag(style)
                         }
                     }
+                    Picker("Loader Style", selection: $languageManager.loaderStyle) {
+                        ForEach(LoaderStyle.allCases) { style in
+                            Text(style.rawValue).tag(style)
+                        }
+                    }
                     Picker("Reveal Animation", selection: $languageManager.revealStyle) {
                         ForEach(RevealStyle.allCases) { style in
                             Text(style.rawValue).tag(style)
@@ -479,7 +486,22 @@ struct FullScreenLoaderView: View {
     
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            switch languageManager.loaderStyle {
+            case .pulse:
+                RadialGradient(colors: [Color.blue.opacity(0.4), Color.black], center: .center, startRadius: 10, endRadius: 500)
+                    .ignoresSafeArea()
+            case .rotatingFlags:
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    Circle().fill(Color.orange.opacity(0.15)).blur(radius: 50).frame(width: 300, height: 300).offset(x: animate ? 100 : -100, y: animate ? -100 : 100)
+                    Circle().fill(Color.green.opacity(0.15)).blur(radius: 50).frame(width: 300, height: 300).offset(x: animate ? -100 : 100, y: animate ? 100 : -100)
+                }.ignoresSafeArea()
+            case .matrix:
+                Color(red: 0.05, green: 0.1, blue: 0.05).ignoresSafeArea()
+            case .morphing:
+                LinearGradient(colors: [Color.indigo.opacity(0.4), Color.black], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .ignoresSafeArea()
+            }
             
             switch languageManager.loaderStyle {
             case .pulse:

@@ -24,6 +24,8 @@ struct LanguageExpandedView: View {
                 HoldSwitcher(context: context)
             case .flip:
                 FlipSwitcher(context: context)
+            case .pillToggle:
+                PillToggleSwitcher(context: context)
             }
         }
         .padding()
@@ -308,5 +310,77 @@ extension ControlTile {
             LanguageExpandedView(context: context)
                 .environmentObject(languageManager)
         }
+    }
+}
+
+// MARK: - Pill Toggle Switcher
+struct PillToggleSwitcher: View {
+    let context: ControlTileContext
+    @EnvironmentObject var languageManager: LanguageManager
+    
+    @State private var dragOffset: CGFloat = 0
+    @State private var isConfirmed = false
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Capsule()
+                    .fill(Color(white: 0.95))
+                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 5)
+                    .overlay(
+                        Capsule().stroke(Color.black.opacity(0.05), lineWidth: 1)
+                    )
+                    .frame(width: 180, height: 70)
+                
+                HStack {
+                    Text("EN")
+                        .font(.title2.weight(.black))
+                        .foregroundColor(languageManager.currentLanguage == .english ? Color(red: 0.2, green: 0.25, blue: 0.35) : Color(white: 0.8))
+                        .frame(maxWidth: .infinity)
+                    
+                    Text("AR")
+                        .font(.title2.weight(.black))
+                        .foregroundColor(languageManager.currentLanguage == .arabic ? Color(red: 0.2, green: 0.25, blue: 0.35) : Color(white: 0.8))
+                        .frame(maxWidth: .infinity)
+                }
+                .frame(width: 160)
+                
+                // The thumb
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 60, height: 60)
+                    .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+                    .overlay(
+                        Text(languageManager.currentLanguage.flag)
+                            .font(.system(size: 38))
+                    )
+                    .offset(x: languageManager.currentLanguage == .english ? -55 : 55)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: languageManager.currentLanguage)
+                    .gesture(
+                        DragGesture()
+                            .onEnded { value in
+                                if (languageManager.currentLanguage == .english && value.translation.width > 30) ||
+                                    (languageManager.currentLanguage == .arabic && value.translation.width < -30) {
+                                    Task {
+                                        withAnimation {
+                                            languageManager.currentLanguage = languageManager.currentLanguage.other
+                                        }
+                                        await triggerChange()
+                                    }
+                                }
+                            }
+                    )
+            }
+            .padding(.top, 20)
+            
+            DisclaimerText(visible: true)
+        }
+    }
+    
+    private func triggerChange() async {
+        try? await Task.sleep(nanoseconds: 800_000_000)
+        context.dismiss()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        await languageManager.switchLanguage(to: languageManager.currentLanguage.other)
     }
 }
