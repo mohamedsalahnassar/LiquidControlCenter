@@ -3,16 +3,18 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		06F2B452783E5F7608DCCA4D /* IntegrationHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF036D611F4902CD9D190BFA /* IntegrationHarness.swift */; };
 		4F8DD162B99A5BB8849E8880 /* ControlCenterUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968C1C39877F4AF400FEB16A /* ControlCenterUITests.swift */; };
 		6BC0652A6E28D8399667EF5A /* ControlCenterDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 429ABD7BB712AAE640D5C98E /* ControlCenterDemoApp.swift */; };
+		86EA5F7A6958294B4D8CFB23 /* LanguageTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCF2FAA50AA9C909807DB03 /* LanguageTileView.swift */; };
 		97CEFF09F089224606674212 /* LiquidControlCenter in Frameworks */ = {isa = PBXBuildFile; productRef = 9791AC532F7D068F6825CC36 /* LiquidControlCenter */; };
 		B99A89A76B61899819E8C057 /* LiquidControlCenter in Frameworks */ = {isa = PBXBuildFile; productRef = 4B5EAB5B2E5A68C05B4EEDD1 /* LiquidControlCenter */; };
 		C259CAA0713C3E55809531DC /* GridTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DE852DEEA92DB0C2055F46 /* GridTests.swift */; };
+		E54146E4E0FBE19C7CD4A762 /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD788664673F637A289A60D8 /* LanguageManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,12 +37,14 @@
 /* Begin PBXFileReference section */
 		09401EA35288715A8BE76E35 /* LiquidControlCenter */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LiquidControlCenter; path = ../..; sourceTree = SOURCE_ROOT; };
 		09DE852DEEA92DB0C2055F46 /* GridTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridTests.swift; sourceTree = "<group>"; };
-		25E7E94B66BD838F46D6996C /* ControlCenterDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ControlCenterDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		25E7E94B66BD838F46D6996C /* ControlCenterDemoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ControlCenterDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		429ABD7BB712AAE640D5C98E /* ControlCenterDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlCenterDemoApp.swift; sourceTree = "<group>"; };
+		8DCF2FAA50AA9C909807DB03 /* LanguageTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageTileView.swift; sourceTree = "<group>"; };
 		968C1C39877F4AF400FEB16A /* ControlCenterUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlCenterUITests.swift; sourceTree = "<group>"; };
-		DFAE1841A3A0714E494834CE /* ControlCenterDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ControlCenterDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD788664673F637A289A60D8 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
+		DFAE1841A3A0714E494834CE /* ControlCenterDemoTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ControlCenterDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF036D611F4902CD9D190BFA /* IntegrationHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationHarness.swift; sourceTree = "<group>"; };
-		F11F882511781EB610F5CB3F /* ControlCenterDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ControlCenterDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F11F882511781EB610F5CB3F /* ControlCenterDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ControlCenterDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +91,8 @@
 			children = (
 				429ABD7BB712AAE640D5C98E /* ControlCenterDemoApp.swift */,
 				EF036D611F4902CD9D190BFA /* IntegrationHarness.swift */,
+				DD788664673F637A289A60D8 /* LanguageManager.swift */,
+				8DCF2FAA50AA9C909807DB03 /* LanguageTileView.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -185,7 +191,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2700;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					97F83F623B03BFDD0CDDE90C = {
 						TestTargetID = C085DBC0E170DBD93A20A575;
@@ -205,6 +211,7 @@
 			packageReferences = (
 				354C60845A7A46405CA87B12 /* XCLocalSwiftPackageReference "../.." */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -230,6 +237,8 @@
 			files = (
 				6BC0652A6E28D8399667EF5A /* ControlCenterDemoApp.swift in Sources */,
 				06F2B452783E5F7608DCCA4D /* IntegrationHarness.swift in Sources */,
+				E54146E4E0FBE19C7CD4A762 /* LanguageManager.swift in Sources */,
+				86EA5F7A6958294B4D8CFB23 /* LanguageTileView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -261,7 +270,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -277,7 +285,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -294,18 +301,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = Z46PAR97LP;
 				INFOPLIST_KEY_CFBundleDisplayName = "Liquid Controls";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mohamedsalahnassar.ControlCenterDemo;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -317,18 +317,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = Z46PAR97LP;
 				INFOPLIST_KEY_CFBundleDisplayName = "Liquid Controls";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mohamedsalahnassar.ControlCenterDemo;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -339,7 +332,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -355,7 +347,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -371,7 +362,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -406,7 +396,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -424,7 +413,6 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
@@ -436,7 +424,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -471,7 +458,6 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -496,7 +482,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;

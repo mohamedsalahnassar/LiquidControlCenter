@@ -16,6 +16,8 @@ struct ControlCenterDemoApp: App {
 }
 
 struct DemoScreen: View {
+    @StateObject private var languageManager = LanguageManager.shared
+    
     @State private var presented = false
     @State private var fallback = ProcessInfo.processInfo.arguments.contains("--fallback")
     @State private var reduceMotion = ProcessInfo.processInfo.arguments.contains("--reduce-motion")
@@ -73,15 +75,15 @@ struct DemoScreen: View {
                         }
                         .foregroundStyle(.white.opacity(0.7))
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Everything.\nWithin reach.")
+                            Text(languageManager.currentLanguage == .english ? "Everything.\nWithin reach." : "كل شيء.\nفي متناول يدك.")
                                 .font(.system(size: 48, weight: .semibold, design: .rounded)).tracking(-2)
-                            Text("Your space, your controls.")
+                            Text(languageManager.currentLanguage == .english ? "Your space, your controls." : "مساحتك، عناصر تحكمك.")
                                 .font(.title3).foregroundStyle(.white.opacity(0.7))
                         }
                         Button { presented = true } label: {
                             HStack {
                                 Image(systemName: "switch.2")
-                                Text("Open Control Center")
+                                Text(languageManager.currentLanguage == .english ? "Open Control Center" : "افتح مركز التحكم")
                                 Spacer()
                                 Image(systemName: "arrow.down.right")
                             }
@@ -92,8 +94,8 @@ struct DemoScreen: View {
                         }
                         .accessibilityIdentifier("demo.open")
                         HStack(spacing: 14) {
-                            summaryCard("Atmosphere", value: "\(Int(brightness * 100))%", icon: "sun.max.fill", color: .orange)
-                            summaryCard("Sound", value: "\(Int(volume * 100))%", icon: "waveform", color: .cyan)
+                            summaryCard(languageManager.currentLanguage == .english ? "Atmosphere" : "الجو العام", value: "\(Int(brightness * 100))%", icon: "sun.max.fill", color: .orange)
+                            summaryCard(languageManager.currentLanguage == .english ? "Sound" : "الصوت", value: "\(Int(volume * 100))%", icon: "waveform", color: .cyan)
                         }
                         VStack(alignment: .leading, spacing: 18) {
                             HStack {
@@ -101,12 +103,12 @@ struct DemoScreen: View {
                                     .frame(width: 64, height: 64)
                                     .overlay(Image(systemName: "waveform").font(.title))
                                 VStack(alignment: .leading, spacing: 5) {
-                                    Text("A little room to breathe").font(.headline)
-                                    Text("Evening sessions · Demo audio").font(.caption).opacity(0.65)
+                                    Text(languageManager.currentLanguage == .english ? "A little room to breathe" : "مساحة صغيرة للتنفس").font(.headline)
+                                    Text(languageManager.currentLanguage == .english ? "Evening sessions · Demo audio" : "جلسات مسائية · صوت تجريبي").font(.caption).opacity(0.65)
                                 }
                             }
                             HStack {
-                                Text(playing ? "Playing in your space" : "Ready when you are")
+                                Text(playing ? (languageManager.currentLanguage == .english ? "Playing in your space" : "يعمل في مساحتك") : (languageManager.currentLanguage == .english ? "Ready when you are" : "جاهز عندما تكون"))
                                     .font(.subheadline).opacity(0.8)
                                 Spacer()
                                 Button { playing.toggle() } label: {
@@ -116,13 +118,14 @@ struct DemoScreen: View {
                             }
                         }
                         .padding(22).background(.white.opacity(0.09), in: RoundedRectangle(cornerRadius: 28))
-                        Text("Touch and hold a control to explore more. Changes stay in sync with this screen.")
+                        Text(languageManager.currentLanguage == .english ? "Touch and hold a control to explore more. Changes stay in sync with this screen." : "المس مع الاستمرار لاكتشاف المزيد. التغييرات تتزامن مع هذه الشاشة.")
                             .font(.footnote).foregroundStyle(.white.opacity(0.6))
                         if !note.isEmpty { Text(note).font(.footnote) }
                     }
                     .padding(26)
                 }
             }
+            .environment(\.layoutDirection, languageManager.currentLanguage.layoutDirection)
             .foregroundStyle(.white)
             .toolbar(.hidden, for: .navigationBar)
             .liquidControlCenter(isPresented: $presented, pages: pages, configuration: configuration)
@@ -135,7 +138,42 @@ struct DemoScreen: View {
                     Button("Done") { showCamera = false }.buttonStyle(.borderedProminent)
                 }.padding(32)
             }
+            
+            // Full Screen Loader
+            if languageManager.isReloading {
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    VStack(spacing: 24) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .tint(.white)
+                        Text(languageManager.loadingMessage)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .transition(.opacity)
+                            .id(languageManager.loadingMessage) // forces transition on text change
+                    }
+                }
+                .transition(.opacity)
+                .zIndex(100)
+            }
+            
+            // Reveal Animation
+            if languageManager.showRevealAnimation {
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    Circle()
+                        .fill(Color.blue)
+                        .scaleEffect(languageManager.showRevealAnimation ? 50 : 0)
+                        .opacity(languageManager.showRevealAnimation ? 0 : 1)
+                        .animation(.easeOut(duration: 0.8), value: languageManager.showRevealAnimation)
+                }
+                .ignoresSafeArea()
+                .zIndex(101)
+                .allowsHitTesting(false)
+            }
         }
+        .environmentObject(languageManager)
         .preferredColorScheme(.dark)
         .task {
             if ProcessInfo.processInfo.arguments.contains("--show-control-center") { presented = true }
@@ -258,6 +296,8 @@ struct DemoScreen: View {
                 ControlCenterLabel("Studio", systemImage: "lightbulb.fill", subtitle: "\(Int(brightness * 100))%", showsTitle: true)
             }
             toggleTile("quiet", title: "Quiet Mode", image: "moon.fill", value: $focus, tint: .indigo)
+        }, ControlCenterPage("settings", title: "Settings", systemImage: "gearshape.fill") {
+            ControlTile.languageTile(languageManager: languageManager)
         }]
     }
 
