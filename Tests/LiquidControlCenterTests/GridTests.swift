@@ -46,6 +46,15 @@ struct GridTests {
         #expect(ControlCenterGrid.columnCount(requested: 4, width: .nan, spacing: 12) == 1)
     }
 
+    @Test func framesMatchLayoutAndReportRows() {
+        let items: [ControlGridItem] = [.init(size: .large), .init(size: .small), .init(size: .tall)]
+        let result = ControlCenterGrid.frames(for: items, requestedColumns: 4, width: 316, spacing: 12, rightToLeft: false)
+        #expect(result.placements.map(\.row) == [0, 0, 0])
+        #expect(result.frames[0] == CGRect(x: 0, y: 0, width: 152, height: 152))
+        #expect(result.frames[2].height == 152)
+        #expect(ControlCenterGrid.frames(for: items, requestedColumns: 4, width: .nan, spacing: 12, rightToLeft: false).frames.count == 3)
+    }
+
     @Test func mirrorsCoordinatesWithoutChangingReadingOrder() {
         let tile = GridPlacement(column: 0, row: 1, columns: 2, rows: 1)
         let ltr = tile.frame(cell: 70, spacing: 12, width: 316, rightToLeft: false)
@@ -87,12 +96,85 @@ struct MotionTests {
     }
 
     @Test func reducedMotionAndBoundedStagger() {
-        #expect(ControlCenterMotion.default.delay(for: 1000, reduceMotion: false) == 0.12)
-        #expect(ControlCenterMotion.default.delay(for: 3, reduceMotion: true) == 0)
+        #expect(ControlCenterMotion.default.rowDelay(1000, reduceMotion: false) == 0.35)
+        #expect(ControlCenterMotion.default.rowDelay(3, reduceMotion: true) == 0)
+        #expect(ControlCenterMotion.default.rowDelay(0, reduceMotion: false) == 0)
         let invalid = ControlCenterMotion(response: .nan, dampingFraction: -1, stagger: .infinity)
-        #expect(invalid.validated.response == 0.48)
+        #expect(invalid.validated.response == 0.5)
         #expect(invalid.validated.dampingFraction == 0.65)
-        #expect(invalid.validated.stagger == 0.018)
+        #expect(invalid.validated.stagger == 0.026)
+    }
+
+    @Test func interactionInvalidatesInFlightCompletions() {
+        var state = PresentationState()
+        let opening = state.request(true)
+        let grabbed = state.beginInteraction()
+        #expect(state.phase == .interacting)
+        let staleOpening = state.complete(generation: opening)
+        let completedInteraction = state.complete(generation: grabbed)
+        #expect(!staleOpening)
+        #expect(!completedInteraction)
+        let released = state.request(false)
+        #expect(state.phase == .dismissing)
+        let dismissed = state.complete(generation: released)
+        #expect(dismissed)
+        #expect(state.phase == .hidden)
+        _ = state.beginInteraction()
+        let reopened = state.request(true)
+        let presented = state.complete(generation: reopened)
+        #expect(presented)
+        #expect(state.phase == .presented)
+    }
+
+    @Test func revealIsHiddenAtZeroSettledAtOneAndStaggered() {
+        let hidden = TileReveal.at(progress: 0, row: 3, delay: 0.1, reduceMotion: false)
+        #expect(hidden.opacity == 0)
+        #expect(hidden.offset < 0)
+        let shown = TileReveal.at(progress: 1, row: 3, delay: 0.1, reduceMotion: false)
+        #expect(shown == TileReveal(opacity: 1, scale: 1, offset: 0))
+        // A later row lags behind an earlier one at the same progress.
+        let first = TileReveal.at(progress: 0.4, row: 0, delay: 0, reduceMotion: false)
+        let later = TileReveal.at(progress: 0.4, row: 4, delay: 0.3, reduceMotion: false)
+        #expect(first.opacity > later.opacity)
+        #expect(first.scale > later.scale)
+        // Spring overshoot passes through instead of clamping.
+        #expect(TileReveal.at(progress: 1.05, row: 0, delay: 0, reduceMotion: false).scale > 1)
+        // Reduce Motion fades only.
+        let reduced = TileReveal.at(progress: 0.5, row: 5, delay: 0.3, reduceMotion: true)
+        #expect(reduced == TileReveal(opacity: 0.5, scale: 1, offset: 0))
+        #expect(TileReveal.at(progress: .nan, row: 0, delay: 0, reduceMotion: false).opacity == 0)
+    }
+
+    @Test func releaseProjectsMomentum() {
+        #expect(GestureMath.shouldPresent(progress: 0.7, velocity: 0))
+        #expect(!GestureMath.shouldPresent(progress: 0.3, velocity: 0))
+        // A flick wins over position.
+        #expect(!GestureMath.shouldPresent(progress: 0.9, velocity: -2))
+        #expect(GestureMath.shouldPresent(progress: 0.15, velocity: 2))
+        // Moderate velocity is projected.
+        #expect(!GestureMath.shouldPresent(progress: 0.6, velocity: -0.5))
+        #expect(!GestureMath.shouldPresent(progress: .nan, velocity: 1))
+    }
+
+    @Test func rubberBandResistsAndPreservesSign() {
+        #expect(GestureMath.rubberBand(0) == 0)
+        let small = GestureMath.rubberBand(50), large = GestureMath.rubberBand(500)
+        #expect(small > 0 && small < 50)
+        #expect(large > small && large < 600)
+        #expect(GestureMath.rubberBand(-50) == -small)
+        #expect(GestureMath.rubberBand(.infinity) == 0)
+    }
+
+    @Test func velocityTrackerUsesRecentSamples() {
+        var tracker = VelocityTracker()
+        #expect(tracker.velocity == 0)
+        tracker.add(0, at: 0)
+        tracker.add(100, at: 0.45)  // older than the 100 ms window once newer samples arrive
+        tracker.add(110, at: 0.55)
+        tracker.add(130, at: 0.6)
+        #expect(abs(tracker.velocity - 400) < 0.001)
+        tracker.reset()
+        #expect(tracker.velocity == 0)
     }
 
     @Test func sliderClampsAndHandlesDegenerateRange() {

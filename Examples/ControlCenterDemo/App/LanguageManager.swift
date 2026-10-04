@@ -69,7 +69,7 @@ public class LanguageManager: ObservableObject {
     
     // Global state for Expand Circle variation
     @Published public var expandCircleScale: CGFloat = 1.0
-    @Published public var expandCircleCenter: CGPoint = CGPoint(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY)
+    @Published public var expandCircleCenter: CGPoint = .zero
     @Published public var loaderStyle: LoaderStyle = .pulse
     
     @Published public var isReloading: Bool = false

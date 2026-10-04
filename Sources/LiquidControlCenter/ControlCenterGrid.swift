@@ -101,6 +101,16 @@ enum ControlCenterGrid {
         return result
     }
 
+    /// Placements and frames for a given width, shared by the layout and by the motion stagger.
+    static func frames(for items: [ControlGridItem], requestedColumns: Int, width: CGFloat,
+                       spacing: CGFloat, rightToLeft: Bool) -> (placements: [GridPlacement], frames: [CGRect]) {
+        let width = width.isFinite ? max(1, width) : 320
+        let count = columnCount(requested: requestedColumns, width: width, spacing: spacing)
+        let cell = max(1, (width - CGFloat(count - 1) * spacing) / CGFloat(count))
+        let placements = placements(for: items, columns: count)
+        return (placements, placements.map { $0.frame(cell: cell, spacing: spacing, width: width, rightToLeft: rightToLeft) })
+    }
+
     static func columnCount(requested: Int, width: CGFloat, spacing: CGFloat) -> Int {
         guard width.isFinite, width > 0 else { return 1 }
         let gap = spacing.isFinite ? max(0, spacing) : 12

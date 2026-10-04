@@ -84,7 +84,7 @@ public struct ControlCenterPage: Identifiable {
     }
 }
 
-public struct ControlCenterConfiguration {
+public struct ControlCenterConfiguration: Sendable {
     public var columns: Int = 4
     public var spacing: CGFloat = 14
     public var horizontalPadding: CGFloat = 28
@@ -93,6 +93,8 @@ public struct ControlCenterConfiguration {
     public var motion: ControlCenterMotion = .default
     public var dimmingOpacity: Double = 0.22
     public var dismissOnBackgroundTap: Bool = true
+    /// Swipe up anywhere outside an interactive control to dismiss, tracking the finger.
+    public var allowsInteractiveDismissal: Bool = true
     public var hapticsEnabled: Bool = true
     /// Exercise the pre-iOS 26 material path on newer devices as well.
     public var forceFallback: Bool = false
