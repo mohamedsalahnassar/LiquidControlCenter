@@ -2,30 +2,6 @@
 import SwiftUI
 import UIKit
 
-struct TileLayout: Layout {
-    let items: [ControlGridItem]
-    let columns: Int
-    let spacing: CGFloat
-    let rightToLeft: Bool
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = max(1, proposal.width ?? 320)
-        return CGSize(width: width, height: frames(width: width).map(\.maxY).max() ?? 0)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        for (subview, frame) in zip(subviews, frames(width: bounds.width)) {
-            subview.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
-                          anchor: .topLeading, proposal: ProposedViewSize(frame.size))
-        }
-    }
-
-    private func frames(width: CGFloat) -> [CGRect] {
-        ControlCenterGrid.frames(for: items, requestedColumns: columns, width: width,
-                                 spacing: spacing, rightToLeft: rightToLeft).frames
-    }
-}
-
 struct ControlCenterView: View {
     @ObservedObject var model: CenterModel
     let pages: [ControlCenterPage]
@@ -111,7 +87,9 @@ struct ControlCenterView: View {
                 }
 
                 if let tile = morphTile {
-                    TileMorph(progress: morph, origin: morphOrigin,
+                    TileMorph(progress: morph,
+                              origin: LayoutMirroring.placement(of: morphOrigin, inWidth: geometry.size.width,
+                                                                rightToLeft: rightToLeft),
                               target: expandedFrame(for: tile, in: geometry.size),
                               compactRadius: tileRadius(tile.size), reduceMotion: reduceMotion,
                               tint: tile.tint,
@@ -196,7 +174,7 @@ struct ControlCenterView: View {
         GeometryReader { area in
             let items = tiles.map { ControlGridItem(size: $0.size, position: $0.position) }
             let layout = ControlCenterGrid.frames(for: items, requestedColumns: configuration.columns,
-                                                  width: area.size.width - 8, spacing: gap, rightToLeft: rightToLeft)
+                                                  width: area.size.width - 8, spacing: gap)
             let contentHeight = (layout.frames.map(\.maxY).max() ?? 0) + 8
             let rows = layout.placements.map(\.row)
             // Scroll only when the grid overflows, so a vertical swipe anywhere else can dismiss.
@@ -215,7 +193,7 @@ struct ControlCenterView: View {
 
     private func pageGrid(rows: [Int]) -> some View {
         TileLayout(items: tiles.map { ControlGridItem(size: $0.size, position: $0.position) },
-                   columns: configuration.columns, spacing: gap, rightToLeft: rightToLeft) {
+                   columns: configuration.columns, spacing: gap) {
             ForEach(Array(tiles.enumerated()), id: \.element.id) { index, tile in
                 tileCell(tile, row: rows.indices.contains(index) ? rows[index] : 0)
             }
@@ -328,7 +306,8 @@ struct ControlCenterView: View {
 
     private func go(to page: ControlCenterPage, forward: Bool) {
         // Set the direction in its own update so the outgoing page picks up the matching removal edge.
-        pageShift = (forward ? 1 : -1) * (rightToLeft ? -1 : 1) * 120
+        // `.offset` mirrors in right-to-left layouts, so the next page enters from the trailing edge in both.
+        pageShift = (forward ? 1 : -1) * 120
         if configuration.hapticsEnabled { UISelectionFeedbackGenerator().selectionChanged() }
         DispatchQueue.main.async {
             morphID = nil
@@ -372,11 +351,12 @@ struct ControlCenterView: View {
                                                           distance: pullDistance(for: height),
                                                           time: CACurrentMediaTime())
                 } else if uniquePages.count > 1 {
-                    pageTracker.add(translation.width, at: CACurrentMediaTime())
-                    let target = currentIndex + (isForward(translation.width) ? 1 : -1)
+                    let dx = pageDistance(translation.width)
+                    pageTracker.add(dx, at: CACurrentMediaTime())
+                    let target = currentIndex + (isForward(dx) ? 1 : -1)
                     let offset = uniquePages.indices.contains(target)
-                        ? translation.width * 0.6
-                        : GestureMath.rubberBand(translation.width, dimension: 300)
+                        ? dx * 0.6
+                        : GestureMath.rubberBand(dx, dimension: 300)
                     withAnimation(.interactiveSpring(response: 0.16, dampingFraction: 0.86)) { pageDrag = offset }
                 }
             }
@@ -387,7 +367,7 @@ struct ControlCenterView: View {
                     return
                 }
                 guard dragAxis == .horizontal, uniquePages.count > 1 else { return }
-                let width = value.translation.width
+                let width = pageDistance(value.translation.width)
                 let velocity = pageTracker.velocity
                 let forward = isForward(width)
                 let flick = abs(velocity) > 450 && isForward(velocity) == forward
@@ -400,8 +380,13 @@ struct ControlCenterView: View {
             }
     }
 
-    /// Swiping toward the leading edge advances, mirrored for right-to-left layouts.
-    private func isForward(_ dx: Double) -> Bool { rightToLeft ? dx > 0 : dx < 0 }
+    /// A horizontal drag in the leading-relative coordinates `.offset` uses, so the grid follows the finger.
+    private func pageDistance(_ translation: CGFloat) -> CGFloat {
+        LayoutMirroring.offset(translation, rightToLeft: rightToLeft)
+    }
+
+    /// Swiping toward the leading edge advances. Page distances run from the leading edge in both directions.
+    private func isForward(_ dx: Double) -> Bool { dx < 0 }
 }
 
 /// Applies the shared progress to one tile. Being `Animatable`, it is evaluated every frame,
@@ -430,6 +415,8 @@ private struct RevealModifier: ViewModifier, Animatable {
 
 private let centerSpace = "liquid-control-center"
 
+/// Tile frames in `centerSpace` as they appear on screen, like the background tap location. Anything placed at one
+/// goes through `LayoutMirroring` first.
 private struct TileFrameKey: PreferenceKey {
     static let defaultValue: [String: CGRect] = [:]
     static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {

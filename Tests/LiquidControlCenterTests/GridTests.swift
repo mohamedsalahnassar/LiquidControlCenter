@@ -1,5 +1,6 @@
 import Foundation
 import CoreGraphics
+import SwiftUI
 import Testing
 @testable import LiquidControlCenter
 
@@ -48,19 +49,147 @@ struct GridTests {
 
     @Test func framesMatchLayoutAndReportRows() {
         let items: [ControlGridItem] = [.init(size: .large), .init(size: .small), .init(size: .tall)]
-        let result = ControlCenterGrid.frames(for: items, requestedColumns: 4, width: 316, spacing: 12, rightToLeft: false)
+        let result = ControlCenterGrid.frames(for: items, requestedColumns: 4, width: 316, spacing: 12)
         #expect(result.placements.map(\.row) == [0, 0, 0])
         #expect(result.frames[0] == CGRect(x: 0, y: 0, width: 152, height: 152))
         #expect(result.frames[2].height == 152)
-        #expect(ControlCenterGrid.frames(for: items, requestedColumns: 4, width: .nan, spacing: 12, rightToLeft: false).frames.count == 3)
+        #expect(ControlCenterGrid.frames(for: items, requestedColumns: 4, width: .nan, spacing: 12).frames.count == 3)
     }
 
-    @Test func mirrorsCoordinatesWithoutChangingReadingOrder() {
+    @Test func framesRunFromTheLeadingEdge() {
+        // SwiftUI mirrors the layout in right-to-left environments (see RightToLeftTests); the grid never does.
         let tile = GridPlacement(column: 0, row: 1, columns: 2, rows: 1)
-        let ltr = tile.frame(cell: 70, spacing: 12, width: 316, rightToLeft: false)
-        let rtl = tile.frame(cell: 70, spacing: 12, width: 316, rightToLeft: true)
-        #expect(ltr == CGRect(x: 0, y: 82, width: 152, height: 70))
-        #expect(rtl.minX == 164)
+        #expect(tile.frame(cell: 70, spacing: 12) == CGRect(x: 0, y: 82, width: 152, height: 70))
+    }
+
+    @Test func measurementsMirrorBackForPlacement() {
+        let measured = CGRect(x: 164, y: 82, width: 152, height: 70)
+        #expect(LayoutMirroring.placement(of: measured, inWidth: 316, rightToLeft: false) == measured)
+        #expect(LayoutMirroring.placement(of: measured, inWidth: 316, rightToLeft: true) == CGRect(x: 0, y: 82, width: 152, height: 70))
+        // Without a recorded frame the morph grows from its panel; mirroring must keep that frame empty.
+        #expect(LayoutMirroring.placement(of: .zero, inWidth: 316, rightToLeft: true).isEmpty)
+        #expect(LayoutMirroring.offset(40, rightToLeft: false) == 40)
+        #expect(LayoutMirroring.offset(40, rightToLeft: true) == -40)
+    }
+}
+
+/// Renders through SwiftUI, which mirrors placement (`Layout`, `.position`, `.offset`) in right-to-left layouts but
+/// measures geometry as it appears on screen. The grid has to cooperate with both.
+@MainActor
+struct RightToLeftTests {
+    /// The arrangement from the report: a large tile on the leading side beside a column of wide tiles, then two
+    /// wide tiles sharing a row.
+    private let items: [ControlGridItem] = [.init(size: .large), .init(size: .wide), .init(size: .wide),
+                                            .init(size: .wide), .init(size: .wide)]
+    private let width: CGFloat = 316
+    private var frames: [CGRect] {
+        ControlCenterGrid.frames(for: items, requestedColumns: 4, width: width, spacing: 12).frames
+    }
+    private var height: CGFloat { frames.map(\.maxY).max() ?? 0 }
+
+    /// Where a leading-edge frame appears on screen.
+    private func onScreen(_ frame: CGRect, _ direction: LayoutDirection) -> CGPoint {
+        CGPoint(x: direction == .rightToLeft ? width - frame.midX : frame.midX, y: frame.midY)
+    }
+
+    @Test(arguments: [LayoutDirection.leftToRight, .rightToLeft])
+    func tilesMirrorExactlyOnce(direction: LayoutDirection) throws {
+        let snapshot = try Snapshot(width: width, height: height, direction: direction) {
+            TileLayout(items: items, columns: 4, spacing: 12) {
+                ForEach(frames.indices, id: \.self) { Snapshot.swatch($0) }
+            }
+        }
+        for index in frames.indices {
+            #expect(snapshot.swatch(at: onScreen(frames[index], direction)) == index, "tile \(index)")
+        }
+    }
+
+    @Test(arguments: [LayoutDirection.leftToRight, .rightToLeft])
+    func expansionStartsOnItsTile(direction: LayoutDirection) throws {
+        // Like the morph: a tile frame read in a named space, then drawn with `.position` in that space.
+        let snapshot = try Snapshot(width: width, height: height, direction: direction) {
+            TileLayout(items: items, columns: 4, spacing: 12) {
+                ForEach(frames.indices, id: \.self) { index in
+                    Snapshot.swatch(index).background(GeometryReader { proxy in
+                        Color.clear.preference(key: MeasuredFrames.self, value: [index: proxy.frame(in: .named("grid"))])
+                    })
+                }
+            }
+            .overlayPreferenceValue(MeasuredFrames.self) { measured in
+                let origin = LayoutMirroring.placement(of: measured[0] ?? .zero, inWidth: width,
+                                                       rightToLeft: direction == .rightToLeft)
+                ZStack(alignment: .topLeading) {
+                    Snapshot.swatch(5).frame(width: origin.width / 2, height: origin.height / 2)
+                        .position(x: origin.midX, y: origin.midY)
+                }
+            }
+            .coordinateSpace(name: "grid")
+        }
+        let tile = onScreen(frames[0], direction)
+        #expect(snapshot.swatch(at: tile) == 5)
+        #expect(snapshot.swatch(at: CGPoint(x: tile.x, y: frames[0].minY + 8)) == 0)
+    }
+
+    @Test(arguments: [LayoutDirection.leftToRight, .rightToLeft])
+    func pagesSlideTowardTheTrailingEdgeAndFollowTheFinger(direction: LayoutDirection) throws {
+        let rightToLeft = direction == .rightToLeft
+        let snapshot = try Snapshot(width: 200, height: 40, direction: direction) {
+            VStack(spacing: 0) {
+                // A page transition offset, which needs no flipping of its own.
+                Snapshot.swatch(0).frame(width: 20, height: 20).offset(x: 50)
+                // A drag translation, measured on screen.
+                Snapshot.swatch(1).frame(width: 20, height: 20).offset(x: LayoutMirroring.offset(50, rightToLeft: rightToLeft))
+            }
+        }
+        #expect(snapshot.swatch(at: CGPoint(x: rightToLeft ? 50 : 150, y: 10)) == 0)
+        #expect(snapshot.swatch(at: CGPoint(x: 150, y: 30)) == 1)
+    }
+}
+
+private struct MeasuredFrames: PreferenceKey {
+    static let defaultValue: [Int: CGRect] = [:]
+    static func reduce(value: inout [Int: CGRect], nextValue: () -> [Int: CGRect]) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
+/// A view rendered at 1× in a layout direction, read back pixel by pixel.
+@MainActor
+private struct Snapshot {
+    /// Pure colors survive rendering exactly, so each tile can be told apart by its pixels.
+    private static let palette: [(red: Double, green: Double, blue: Double)] =
+        [(1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (1, 0, 1), (0, 1, 1)]
+    private let width: Int
+    private var pixels: [UInt8]
+
+    static func swatch(_ index: Int) -> Color {
+        Color(red: palette[index].red, green: palette[index].green, blue: palette[index].blue)
+    }
+
+    init(width: CGFloat, height: CGFloat, direction: LayoutDirection, @ViewBuilder content: () -> some View) throws {
+        let renderer = ImageRenderer(content: content().frame(width: width, height: height)
+            .environment(\.layoutDirection, direction))
+        renderer.scale = 1
+        let image = try #require(renderer.cgImage)
+        let space = try #require(CGColorSpace(name: CGColorSpace.sRGB))
+        self.width = image.width
+        pixels = [UInt8](repeating: 0, count: image.width * image.height * 4)
+        try pixels.withUnsafeMutableBytes { buffer in
+            let context = try #require(CGContext(data: buffer.baseAddress, width: image.width, height: image.height,
+                                                 bitsPerComponent: 8, bytesPerRow: image.width * 4, space: space,
+                                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+            context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        }
+    }
+
+    /// The palette index of the opaque color at a point, in points from the top-left corner.
+    func swatch(at point: CGPoint) -> Int? {
+        let start = (Int(point.y) * width + Int(point.x)) * 4
+        let rgba = pixels[start..<start + 4].map { Double($0) / 255 }
+        guard rgba[3] > 0.9 else { return nil }
+        return Self.palette.firstIndex {
+            abs($0.red - rgba[0]) < 0.1 && abs($0.green - rgba[1]) < 0.1 && abs($0.blue - rgba[2]) < 0.1
+        }
     }
 }
 
@@ -203,7 +332,6 @@ struct RobustnessTests {
 }
 
 #if os(iOS)
-import SwiftUI
 struct TileAPITests {
     @Test @MainActor func builderSupportsConditionsLoopsAndArrays() {
         @ControlCenterBuilder func controls(show: Bool) -> [ControlTile] {

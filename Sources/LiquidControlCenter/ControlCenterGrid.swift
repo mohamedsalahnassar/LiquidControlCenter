@@ -1,5 +1,6 @@
 import Foundation
 import CoreGraphics
+import SwiftUI
 
 /// The footprint of a control in grid cells. Values are bounded to keep layout finite.
 public struct ControlTileSize: Hashable, Sendable, Codable {
@@ -51,10 +52,10 @@ struct GridPlacement: Equatable {
     let columns: Int
     let rows: Int
 
-    func frame(cell: CGFloat, spacing: CGFloat, width: CGFloat, rightToLeft: Bool) -> CGRect {
+    /// Measured from the leading edge in both layout directions; `TileLayout` explains why.
+    func frame(cell: CGFloat, spacing: CGFloat) -> CGRect {
         let widthOfTile = CGFloat(columns) * cell + CGFloat(columns - 1) * spacing
-        let x = CGFloat(column) * (cell + spacing)
-        let originX: CGFloat = rightToLeft ? width - x - widthOfTile : x
+        let originX: CGFloat = CGFloat(column) * (cell + spacing)
         let originY: CGFloat = CGFloat(row) * (cell + spacing)
         let height: CGFloat = CGFloat(rows) * cell + CGFloat(rows - 1) * spacing
         return CGRect(x: originX, y: originY, width: widthOfTile, height: height)
@@ -103,12 +104,12 @@ enum ControlCenterGrid {
 
     /// Placements and frames for a given width, shared by the layout and by the motion stagger.
     static func frames(for items: [ControlGridItem], requestedColumns: Int, width: CGFloat,
-                       spacing: CGFloat, rightToLeft: Bool) -> (placements: [GridPlacement], frames: [CGRect]) {
+                       spacing: CGFloat) -> (placements: [GridPlacement], frames: [CGRect]) {
         let width = width.isFinite ? max(1, width) : 320
         let count = columnCount(requested: requestedColumns, width: width, spacing: spacing)
         let cell = max(1, (width - CGFloat(count - 1) * spacing) / CGFloat(count))
         let placements = placements(for: items, columns: count)
-        return (placements, placements.map { $0.frame(cell: cell, spacing: spacing, width: width, rightToLeft: rightToLeft) })
+        return (placements, placements.map { $0.frame(cell: cell, spacing: spacing) })
     }
 
     static func columnCount(requested: Int, width: CGFloat, spacing: CGFloat) -> Int {
@@ -117,5 +118,45 @@ enum ControlCenterGrid {
         let bounded = min(12, max(1, requested))
         let fitting = min(CGFloat(bounded), max(1, ((width + gap) / (44 + gap)).rounded(.down)))
         return Int(fitting)
+    }
+}
+
+/// Places tiles at their grid frames, from the leading edge. SwiftUI mirrors a custom layout's placements in
+/// right-to-left environments, so mirroring the frames here as well would cancel that out.
+struct TileLayout: Layout {
+    let items: [ControlGridItem]
+    let columns: Int
+    let spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = max(1, proposal.width ?? 320)
+        return CGSize(width: width, height: frames(width: width).map(\.maxY).max() ?? 0)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for (subview, frame) in zip(subviews, frames(width: bounds.width)) {
+            subview.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                          anchor: .topLeading, proposal: ProposedViewSize(frame.size))
+        }
+    }
+
+    private func frames(width: CGFloat) -> [CGRect] {
+        ControlCenterGrid.frames(for: items, requestedColumns: columns, width: width, spacing: spacing).frames
+    }
+}
+
+/// SwiftUI places views from the leading edge (`Layout`, `.position`, `.offset`) and mirrors that placement in
+/// right-to-left layouts, but reports geometry as it appears on screen (geometry readers, gesture locations and
+/// translations). These turn a measurement into a placement, so it is mirrored exactly once.
+enum LayoutMirroring {
+    /// A frame measured in a container of the given width, as `.position` in that container expects it.
+    static func placement(of frame: CGRect, inWidth width: CGFloat, rightToLeft: Bool) -> CGRect {
+        guard rightToLeft else { return frame }
+        return CGRect(x: width - frame.maxX, y: frame.minY, width: frame.width, height: frame.height)
+    }
+
+    /// A horizontal distance measured on screen, such as a drag translation, as `.offset(x:)` expects it.
+    static func offset(_ distance: CGFloat, rightToLeft: Bool) -> CGFloat {
+        rightToLeft ? -distance : distance
     }
 }

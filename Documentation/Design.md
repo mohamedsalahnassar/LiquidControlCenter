@@ -18,6 +18,7 @@ Reference media is held locally in ignored `.artifacts/references`, not redistri
 - A deterministic first-fit grid supports heterogeneous spans and optional preferred positions. Collisions resolve predictably. Stable tile IDs preserve identity during updates.
 - Expansion is an explicit morph driven by one animatable value: frame from the recorded tile frame to the panel, corner radius, compact→expanded content crossfade, and the collapse button. `matchedGeometryEffect` was dropped because it did not reliably find its source inside the custom grid `Layout`, which made the panel pop in at full size. Background controls become noninteractive while a tile is expanded.
 - Reduce Motion replaces spatial motion with fades. Reduce Transparency uses opaque surfaces. Layout is bounded, scrollable, safe-area aware, and mirrored in right-to-left environments.
+- SwiftUI mirrors placement itself (`Layout`, `.position`, `.offset`) but reports geometry as it appears on screen (geometry readers, gestures). Grid frames therefore run from the leading edge and SwiftUI mirrors them once; recorded tile frames (the expansion origin) and drag translations go through `LayoutMirroring` before they place anything. `RightToLeftTests` render through SwiftUI to hold both halves of that contract.
 - Native Control Center uses private effects and unpublished animation tuning. Timing here is an adjustable approximation, not a claim of pixel or physics parity.
 
 ## Motion verification (October 2026)
