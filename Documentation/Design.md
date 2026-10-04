@@ -5,7 +5,7 @@
 - [Apple: Use and customize Control Center, iOS 26](https://support.apple.com/guide/iphone/use-and-customize-control-center-iph59095ec58/ios): four-column mixed-span grid, circular buttons, large rounded groups, vertical sliders, hold-to-expand, bottom-edge dismissal, group navigation.
 - [Apple: Meet Liquid Glass, WWDC25 session 219](https://developer.apple.com/videos/play/wwdc2025/219/): Dynamics chapter at 1:29; Adaptivity at 6:00. Primary motion and material reference.
 - [Apple: Applying Liquid Glass to custom views](https://developer.apple.com/documentation/swiftui/applying-liquid-glass-to-custom-views): glass containers and native effect composition.
-- [LiquidGlassKit source](https://github.com/mohamedsalahnassar/LiquidGlassKit/blob/c1dd2276164446c1df417f96984749ab8e6d465a/Sources/LiquidGlassKit/LiquidGlassKit.swift): audited source rather than README claims. Current manifest requires Swift 6.3 and iOS 16; no release tags exist.
+- [LiquidGlassKit source](https://github.com/mohamedsalahnassar/LiquidGlassKit/blob/c1dd2276164446c1df417f96984749ab8e6d465a/Sources/LiquidGlassKit/LiquidGlassKit.swift): the original glass shim. Its manifest requires Swift tools 6.3, which forced every consumer onto the newest Xcode. The small part used here (native glass on iOS 26, material before) now lives in `GlassSurface.swift`, guarded by a compiler check.
 
 Reference media is held locally in ignored `.artifacts/references`, not redistributed with the library.
 
@@ -13,11 +13,16 @@ Reference media is held locally in ignored `.artifacts/references`, not redistri
 
 - Public APIs only. This is an app-owned control center; actions and data belong to its host app.
 - A transparent UIKit over-full-screen host retains the presenting view for live backdrop sampling and covers navigation/tab chrome even when the modifier is attached to a nested SwiftUI screen.
-- The backdrop animates its visual effect itself, rather than fading the alpha of a UIVisualEffectView. Tiles use a separate interruptible SwiftUI spring and short bounded stagger.
+- One presentation progress drives everything. The backdrop blur is scrubbed through a paused `UIViewPropertyAnimator` inside an `Animatable` view, so it follows the same SwiftUI spring as the tiles, frame by frame, and can track a finger. The visual-effect view always stays at full alpha. Tiles derive opacity, scale, and offset from the progress with a bounded per-row delay.
+- Opening, closing, and both interactive gestures use the same pipeline. While tracking, interactive springs keep up with the finger, and the release spring inherits their velocity. Release decisions project momentum.
 - A deterministic first-fit grid supports heterogeneous spans and optional preferred positions. Collisions resolve predictably. Stable tile IDs preserve identity during updates.
-- Expandable content originates at the compact tile frame, with its own content transition. Background controls become noninteractive while a tile is expanded.
+- Expansion is an explicit morph driven by one animatable value: frame from the recorded tile frame to the panel, corner radius, compact→expanded content crossfade, and the collapse button. `matchedGeometryEffect` was dropped because it did not reliably find its source inside the custom grid `Layout`, which made the panel pop in at full size. Background controls become noninteractive while a tile is expanded.
 - Reduce Motion replaces spatial motion with fades. Reduce Transparency uses opaque surfaces. Layout is bounded, scrollable, safe-area aware, and mirrored in right-to-left environments.
 - Native Control Center uses private effects and unpublished animation tuning. Timing here is an adjustable approximation, not a claim of pixel or physics parity.
+
+## Motion verification (October 2026)
+
+Motion was compared by recording the simulator (`simctl io recordVideo`) and extracting frames at 30 fps. Before the rewrite, closing removed the blur in about 0.1 s while tiles stayed half-opaque over the sharp app, and the host disappeared with tiles still visible. Opening reached full blur before the tiles were legible. After the rewrite, blur, dimming, chrome, and tiles move together, and nothing is visible when the host is removed. The sample's `--motion-loop` argument reproduces the recording setup.
 
 ## Commit plan
 

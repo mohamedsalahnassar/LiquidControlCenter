@@ -8,6 +8,8 @@ struct ControlCenterDemoApp: App {
         WindowGroup {
             if ProcessInfo.processInfo.arguments.contains("--integration-harness") {
                 IntegrationHarness()
+            } else if ProcessInfo.processInfo.arguments.contains("--uikit-host") {
+                UIKitHostScreen().ignoresSafeArea()
             } else {
                 DemoScreen()
                     .dynamicTypeSize(ProcessInfo.processInfo.arguments.contains("--large-type") ? .accessibility3 : .large)
@@ -76,6 +78,9 @@ struct DemoScreen: View {
                                 .frame(width: 44, height: 44)
                         }
                         .foregroundStyle(.white.opacity(0.7))
+                        // Pull down on the header to open the center with your finger, like the system.
+                        .contentShape(Rectangle())
+                        .liquidControlCenterPullDown()
                         VStack(alignment: .leading, spacing: 10) {
                             Text(languageManager.currentLanguage == .english ? "Everything.\nWithin reach." : "كل شيء.\nفي متناول يدك.")
                                 .font(.system(size: 48, weight: .semibold, design: .rounded)).tracking(-2)
@@ -159,6 +164,13 @@ struct DemoScreen: View {
         .task {
             GlobalOverlayWindow.shared.setup(languageManager: languageManager)
             if ProcessInfo.processInfo.arguments.contains("--show-control-center") { presented = true }
+            // Opens and closes repeatedly so the motion can be recorded and compared frame by frame.
+            if ProcessInfo.processInfo.arguments.contains("--motion-loop") {
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(2))
+                    presented.toggle()
+                }
+            }
         }
     }
 
@@ -560,13 +572,16 @@ struct RevealMaskView: View {
                     )
                     .compositingGroup()
             case .curtain:
-                HStack(spacing: 0) {
-                    Rectangle()
-                        .fill(Color.black)
-                        .offset(x: languageManager.showRevealAnimation ? -UIScreen.main.bounds.width : 0)
-                    Rectangle()
-                        .fill(Color.black)
-                        .offset(x: languageManager.showRevealAnimation ? UIScreen.main.bounds.width : 0)
+                // `UIScreen.main` is deprecated and wrong in split view and on external displays.
+                GeometryReader { geometry in
+                    HStack(spacing: 0) {
+                        Rectangle()
+                            .fill(Color.black)
+                            .offset(x: languageManager.showRevealAnimation ? -geometry.size.width : 0)
+                        Rectangle()
+                            .fill(Color.black)
+                            .offset(x: languageManager.showRevealAnimation ? geometry.size.width : 0)
+                    }
                 }
             case .textZoom:
                 Rectangle().fill(Color.black)

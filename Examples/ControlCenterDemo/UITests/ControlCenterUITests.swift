@@ -128,4 +128,38 @@ extension ControlCenterUITests {
         collapse.tap()
         close.tap()
     }
+
+    @MainActor func testUIKitHostWithoutSwiftUIModifier() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uikit-host"]
+        app.launch()
+        app.buttons["uikit.open"].tap()
+        let close = app.buttons["control-center.close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5))
+        let flashlight = app.buttons["control-tile.uikit-flashlight"]
+        XCTAssertEqual(flashlight.value as? String, "Off")
+        flashlight.tap()
+        XCTAssertEqual(flashlight.value as? String, "On", "Rebuilding pages must refresh the presented tiles")
+        close.tap()
+        XCTAssertTrue(app.staticTexts["Flashlight on · Dismissals: 1"].waitForExistence(timeout: 3))
+        // Interactive presentation: pull the UIKit view down.
+        let pull = app.staticTexts["uikit.pull"]
+        pull.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)))
+        XCTAssertTrue(close.waitForExistence(timeout: 3))
+        close.tap()
+        XCTAssertTrue(app.staticTexts["Flashlight on · Dismissals: 2"].waitForExistence(timeout: 3))
+    }
+
+    @MainActor func testSwipeUpDismisses() {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["demo.open"].tap()
+        let close = app.buttons["control-center.close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5))
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
+        start.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)))
+        XCTAssertTrue(app.buttons["demo.open"].waitForExistence(timeout: 3))
+        XCTAssertFalse(close.exists)
+    }
 }

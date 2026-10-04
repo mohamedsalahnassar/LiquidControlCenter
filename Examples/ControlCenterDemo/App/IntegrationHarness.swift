@@ -66,3 +66,81 @@ private struct SheetHarness: View {
             }
     }
 }
+
+// MARK: - UIKit host
+
+/// A plain UIKit screen, as a React Native or Flutter plugin would provide. No SwiftUI view tree is required:
+/// the controller presents itself, and app state is pushed in by rebuilding `pages`.
+final class UIKitHostController: UIViewController {
+    private var flashlight = false
+    private var dismissals = 0
+    private let status = UILabel()
+    private lazy var center = LiquidControlCenterController(pages: makePages())
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemIndigo
+
+        let pullArea = UILabel()
+        pullArea.text = "Pull down here"
+        pullArea.textAlignment = .center
+        pullArea.textColor = .white
+        pullArea.isUserInteractionEnabled = true
+        pullArea.accessibilityIdentifier = "uikit.pull"
+        center.addPullDownGesture(to: pullArea)
+
+        let open = UIButton(configuration: .filled(), primaryAction: UIAction(title: "Open from UIKit") { [weak self] _ in
+            guard let self else { return }
+            self.center.present(from: self)
+        })
+        open.accessibilityIdentifier = "uikit.open"
+
+        status.textColor = .white
+        status.accessibilityIdentifier = "uikit.status"
+        center.onDismiss = { [weak self] in
+            guard let self else { return }
+            self.dismissals += 1
+            self.updateStatus()
+        }
+        updateStatus()
+
+        let stack = UIStackView(arrangedSubviews: [pullArea, open, status])
+        stack.axis = .vertical
+        stack.spacing = 24
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            pullArea.heightAnchor.constraint(equalToConstant: 120)
+        ])
+    }
+
+    private func updateStatus() {
+        status.text = "Flashlight \(flashlight ? "on" : "off") · Dismissals: \(dismissals)"
+    }
+
+    private func makePages() -> [ControlCenterPage] {
+        [ControlCenterPage("uikit", title: "From UIKit", systemImage: "square.stack.3d.up.fill") {
+            ControlTile("uikit-flashlight", label: "Flashlight", tint: flashlight ? .orange : nil,
+                        action: { [weak self] in
+                            guard let self else { return }
+                            self.flashlight.toggle()
+                            self.center.pages = self.makePages()
+                            self.updateStatus()
+                        }) { [flashlight] _ in
+                ControlCenterLabel("Flashlight", systemImage: flashlight ? "flashlight.on.fill" : "flashlight.off.fill")
+                    .accessibilityValue(flashlight ? "On" : "Off")
+            }
+            ControlTile("uikit-info", size: .wide, label: "Host") { _ in
+                ControlCenterLabel("UIKit host", systemImage: "uiwindow.split.2x1", subtitle: "No SwiftUI tree", showsTitle: true)
+            }
+        }]
+    }
+}
+
+struct UIKitHostScreen: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIKitHostController { UIKitHostController() }
+    func updateUIViewController(_ controller: UIKitHostController, context: Context) {}
+}

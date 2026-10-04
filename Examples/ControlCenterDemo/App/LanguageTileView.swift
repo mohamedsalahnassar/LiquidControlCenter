@@ -168,6 +168,7 @@ struct HoldSwitcher: View {
     
     @State private var progress: CGFloat = 0.0
     @State private var isConfirmed = false
+    @State private var holding: Task<Void, Never>?
     
     var body: some View {
         VStack(spacing: 24) {
@@ -191,19 +192,21 @@ struct HoldSwitcher: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in
-                        guard !isConfirmed else { return }
-                        withAnimation(.linear(duration: 0.1)) {
-                            progress += 0.05
-                            if progress >= 1.0 {
-                                progress = 1.0
-                                isConfirmed = true
-                                Task { await triggerChange() }
-                            }
+                        // Progress is driven by time held, not by finger movement.
+                        guard !isConfirmed, holding == nil else { return }
+                        withAnimation(.linear(duration: 1.2)) { progress = 1 }
+                        holding = Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(1.2))
+                            guard !Task.isCancelled else { return }
+                            isConfirmed = true
+                            await triggerChange()
                         }
                     }
                     .onEnded { _ in
                         guard !isConfirmed else { return }
-                        withAnimation { progress = 0 }
+                        holding?.cancel()
+                        holding = nil
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { progress = 0 }
                     }
             )
             
@@ -325,8 +328,11 @@ struct PillToggleSwitcher: View {
     let context: ControlTileContext
     @EnvironmentObject var languageManager: LanguageManager
     
-    @State private var dragOffset: CGFloat = 0
     @State private var isConfirmed = false
+    /// The language the thumb shows; moves ahead of the real switch so the toggle animates immediately.
+    @State private var shown: AppLanguage?
+    
+    private var displayed: AppLanguage { shown ?? languageManager.currentLanguage }
     
     var body: some View {
         VStack(spacing: 24) {
@@ -342,12 +348,12 @@ struct PillToggleSwitcher: View {
                 HStack {
                     Text("EN")
                         .font(.title2.weight(.black))
-                        .foregroundColor(languageManager.currentLanguage == .english ? Color(red: 0.2, green: 0.25, blue: 0.35) : Color(white: 0.8))
+                        .foregroundColor(displayed == .english ? Color(red: 0.2, green: 0.25, blue: 0.35) : Color(white: 0.8))
                         .frame(maxWidth: .infinity)
                     
                     Text("AR")
                         .font(.title2.weight(.black))
-                        .foregroundColor(languageManager.currentLanguage == .arabic ? Color(red: 0.2, green: 0.25, blue: 0.35) : Color(white: 0.8))
+                        .foregroundColor(displayed == .arabic ? Color(red: 0.2, green: 0.25, blue: 0.35) : Color(white: 0.8))
                         .frame(maxWidth: .infinity)
                 }
                 .frame(width: 160)
@@ -358,22 +364,21 @@ struct PillToggleSwitcher: View {
                     .frame(width: 60, height: 60)
                     .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
                     .overlay(
-                        Text(languageManager.currentLanguage.flag)
+                        Text(displayed.flag)
                             .font(.system(size: 38))
                     )
-                    .offset(x: languageManager.currentLanguage == .english ? -55 : 55)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: languageManager.currentLanguage)
+                    .offset(x: displayed == .english ? -55 : 55)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: displayed)
                     .gesture(
                         DragGesture()
                             .onEnded { value in
-                                if (languageManager.currentLanguage == .english && value.translation.width > 30) ||
-                                    (languageManager.currentLanguage == .arabic && value.translation.width < -30) {
-                                    Task {
-                                        withAnimation {
-                                            languageManager.currentLanguage = languageManager.currentLanguage.other
-                                        }
-                                        await triggerChange()
-                                    }
+                                guard !isConfirmed else { return }
+                                let current = languageManager.currentLanguage
+                                if (current == .english && value.translation.width > 30) ||
+                                    (current == .arabic && value.translation.width < -30) {
+                                    isConfirmed = true
+                                    shown = current.other
+                                    Task { await triggerChange(to: current.other) }
                                 }
                             }
                     )
@@ -384,11 +389,11 @@ struct PillToggleSwitcher: View {
         }
     }
     
-    private func triggerChange() async {
+    private func triggerChange(to target: AppLanguage) async {
         try? await Task.sleep(nanoseconds: 800_000_000)
         context.dismiss()
         try? await Task.sleep(nanoseconds: 300_000_000)
-        await languageManager.switchLanguage(to: languageManager.currentLanguage.other)
+        await languageManager.switchLanguage(to: target)
     }
 }
 
