@@ -29,7 +29,7 @@ struct DemoScreen: View {
     @State private var spacing: CGFloat = 14
     @State private var horizontalPadding: CGFloat = 28
     @State private var maximumWidth: CGFloat = 430
-    @State private var dimmingOpacity: Double = 0.22
+    @State private var backdrop = BackdropPreset.fromLaunchArguments.backdrop ?? .liquidGlass
     @State private var airplane = false
     @State private var wifi = true
     @State private var bluetooth = true
@@ -58,7 +58,7 @@ struct DemoScreen: View {
         config.spacing = spacing
         config.horizontalPadding = horizontalPadding
         config.maximumWidth = maximumWidth
-        config.dimmingOpacity = dimmingOpacity
+        config.backdrop = backdrop
         return config
     }
 
@@ -418,9 +418,23 @@ struct DemoScreen: View {
                         Text("Maximum Width: \(Int(maximumWidth))")
                         Slider(value: $maximumWidth, in: 300...800, step: 10)
                     }
+                }
+                Section("Backdrop") {
+                    Picker("Preset", selection: Binding(get: { BackdropPreset(backdrop) }, set: { backdrop = $0.backdrop ?? backdrop })) {
+                        ForEach(BackdropPreset.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    Picker("Liquid Glass", selection: $backdrop.glass) {
+                        Text("None").tag(ControlCenterBackdrop.Glass.none)
+                        Text("Clear").tag(ControlCenterBackdrop.Glass.clear)
+                        Text("Regular").tag(ControlCenterBackdrop.Glass.regular)
+                    }
                     VStack(alignment: .leading) {
-                        Text("Dimming Opacity: \(String(format: "%.2f", dimmingOpacity))")
-                        Slider(value: $dimmingOpacity, in: 0...1, step: 0.05)
+                        Text("Blur: \(Int(backdrop.blur * 100))%")
+                        Slider(value: $backdrop.blur, in: 0...1, step: 0.05)
+                    }
+                    VStack(alignment: .leading) {
+                        Text("Dimming: \(Int(backdrop.dimming * 100))%")
+                        Slider(value: $backdrop.dimming, in: 0...0.85, step: 0.01)
                     }
                 }
                 Section("Creative Options") {
@@ -447,6 +461,40 @@ struct DemoScreen: View {
             }
             .navigationTitle("Demo settings")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showSettings = false } } }
+        }
+    }
+}
+
+/// The backdrop presets offered in settings, plus whatever the sliders made.
+enum BackdropPreset: CaseIterable {
+    case liquidGlass, translucent, standard, custom
+
+    init(_ backdrop: ControlCenterBackdrop) {
+        self = Self.allCases.first { $0.backdrop == backdrop } ?? .custom
+    }
+
+    /// `--backdrop=liquidGlass`, `translucent`, or `standard` picks the starting preset.
+    static var fromLaunchArguments: Self {
+        let name = ProcessInfo.processInfo.arguments.first { $0.hasPrefix("--backdrop=") }
+            .map { String($0.dropFirst("--backdrop=".count)) }
+        return allCases.first { "\($0)" == name } ?? .liquidGlass
+    }
+
+    var backdrop: ControlCenterBackdrop? {
+        switch self {
+        case .liquidGlass: .liquidGlass
+        case .translucent: .translucent
+        case .standard: .standard
+        case .custom: nil
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .liquidGlass: "Liquid Glass"
+        case .translucent: "Translucent"
+        case .standard: "Standard"
+        case .custom: "Custom"
         }
     }
 }

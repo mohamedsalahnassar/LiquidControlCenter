@@ -536,8 +536,7 @@ struct CenterRoot: View {
 
     var body: some View {
         ZStack {
-            CenterBackdrop(progress: model.progress,
-                           dimming: configuration.dimmingOpacity.isFinite ? min(0.85, max(0, configuration.dimmingOpacity)) : 0.22,
+            CenterBackdrop(progress: model.progress, backdrop: configuration.backdrop.validated,
                            opaque: reduceTransparency || configuration.forceReducedTransparency)
             ControlCenterView(model: model, pages: pages, configuration: configuration)
         }

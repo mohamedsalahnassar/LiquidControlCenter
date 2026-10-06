@@ -8,7 +8,7 @@ An app-owned Control Center with live full-screen blur, Liquid Glass surfaces, m
 
 Open `Examples/ControlCenterDemo/ControlCenterDemo.xcodeproj`, select **ControlCenterDemo**, and run on an iPhone or iPad simulator. The project is checked in; XcodeGen is only needed after changing `project.yml`.
 
-The sample includes connectivity, media, vertical brightness/volume, focus, utility controls, and three pages. All state is local to the sample. Its settings let you switch to three columns, preview fallback materials, and exercise reduced motion and transparency. Controls demonstrate app actions; they do not modify system Wi-Fi, Bluetooth, recording, or other protected system settings.
+The sample includes connectivity, media, vertical brightness/volume, focus, utility controls, and three pages. All state is local to the sample. Its settings let you switch to three columns, tune the backdrop, preview fallback materials, and exercise reduced motion and transparency. Pass `--backdrop=translucent` or `--backdrop=standard` to start with another backdrop preset. Controls demonstrate app actions; they do not modify system Wi-Fi, Bluetooth, recording, or other protected system settings.
 
 For a physical device, choose your development team and override `CODE_SIGNING_ALLOWED` to `YES` in the sample project’s build settings. Signing is disabled by default for simulator use.
 
@@ -118,14 +118,33 @@ configuration.columns = 4
 configuration.spacing = 14
 configuration.horizontalPadding = 28
 configuration.maximumWidth = 430
-configuration.dimmingOpacity = 0.22
+configuration.backdrop = .liquidGlass   // or .translucent, .standard
 configuration.dismissOnBackgroundTap = true
 configuration.allowsInteractiveDismissal = true
 configuration.motion = .init(response: 0.5, dampingFraction: 0.84,
                              stagger: 0.026, dismissalDuration: 0.34)
 ```
 
-Pass this as `configuration:` to the modifier (or set it on `LiquidControlCenterController`). Settings also cover title, horizontal padding, backdrop dimming, background-tap dismissal, swipe-to-dismiss, haptics, and visual fallback/accessibility previews. Invalid numeric configuration values are bounded or replaced with defaults.
+Pass this as `configuration:` to the modifier (or set it on `LiquidControlCenterController`). Settings also cover title, horizontal padding, background-tap dismissal, swipe-to-dismiss, haptics, and visual fallback/accessibility previews. Invalid numeric configuration values are bounded or replaced with defaults.
+
+### Backdrop
+
+The backdrop is the layer over your app while the center is open: a live blur, an optional full-screen Liquid Glass layer, and black dimming. Pick a preset or tune each part:
+
+| Preset | Blur | Liquid Glass | Dimming | Look |
+|---|---|---|---|---|
+| `.liquidGlass` (default) | 0.45 | `.clear` | 0.12 | The app stays recognizable under clear glass, with Liquid Glass light and lensing at the screen edges |
+| `.translucent` | 0.45 | `.none` | 0.15 | The same lighter blur, without glass |
+| `.standard` | 1 | `.none` | 0.22 | The full material blur, the previous default |
+
+```swift
+configuration.backdrop = .translucent
+configuration.backdrop.blur = 0.6          // 0 keeps the app sharp, 1 is the full blur
+configuration.backdrop.glass = .regular    // .none, .clear, or .regular
+configuration.backdrop.dimming = 0.2       // up to 0.85
+```
+
+The glass is drawn by LiquidGlassKit on iOS 26 and later; earlier systems show the blur and dimming alone. Reduce Transparency replaces the whole backdrop with an opaque scrim. `dimmingOpacity` still works but is deprecated in favor of `backdrop.dimming`.
 
 ### Multiple pages
 
@@ -148,7 +167,7 @@ Tap a page icon or swipe vertically on the trailing rail. You can also swipe hor
 
 Everything visible derives from a single presentation progress: the live backdrop blur, the dimming, the header and page rail, and every tile. They share one spring and cannot drift apart. That removes the ghosting where tiles lingered over an already-sharp app, and the pop when the host disappeared before the tiles finished.
 
-- **Backdrop.** The blur radius is scrubbed with a paused `UIViewPropertyAnimator`, evaluated every animation frame, while the effect view stays at full alpha. The blur leads the tiles slightly, like the system.
+- **Backdrop.** The blur radius is scrubbed with a paused `UIViewPropertyAnimator`, evaluated every animation frame, while the effect view stays at full alpha. The blur leads the tiles slightly, like the system. At rest the animator is finished where it stands, so a partial blur keeps its radius without an animation left in flight, and UI tests are not held up waiting for the app to idle.
 - **Tiles.** Tiles unfold downward row by row with a short, bounded stagger. They settle with the opening spring's small overshoot. Closing is critically damped, so it never bounces.
 - **Gestures.** Swipe up anywhere outside an interactive control to dismiss. Content follows the finger, and the release decision projects momentum, so a flick closes and a slow, short drag springs back. Pulling down past the top resists with a rubber band. Interactive springs hand the finger's velocity to the release spring, so there is no visible hitch on release. Sliders and buttons keep priority over these gestures.
 - **Interruption.** Any animation can be interrupted: reopen during a close, grab during an open, or collapse mid-expansion. Generation tokens stop obsolete completions from dismissing a reopened center.

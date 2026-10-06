@@ -77,14 +77,15 @@ struct ControlPressStyle: ButtonStyle {
     }
 }
 
-/// Full-screen live blur and dimming whose strength follows the presentation progress frame by frame.
+/// Full-screen live blur, optional Liquid Glass, and dimming, whose strength follows the presentation progress frame
+/// by frame.
 ///
-/// Conforming to `Animatable` makes SwiftUI evaluate this view for every animation frame, so the blur
+/// Conforming to `Animatable` makes SwiftUI evaluate this view for every animation frame, so the backdrop
 /// shares the exact spring of the tiles and can be scrubbed by a finger. The blur radius itself is
 /// interpolated by a paused `UIViewPropertyAnimator`; the effect view always stays at full alpha.
 struct CenterBackdrop: View, Animatable {
     var progress: Double
-    var dimming: Double
+    var backdrop: ControlCenterBackdrop
     var opaque: Bool
 
     nonisolated var animatableData: Double {
@@ -99,8 +100,15 @@ struct CenterBackdrop: View, Animatable {
                 Color.black.opacity(0.88 * visible)
             } else {
                 // The blur leads the tiles slightly, like the system, so controls never sit on a sharp app.
-                ScrubbableBlur(fraction: pow(visible, 0.75))
-                Color.black.opacity(dimming * visible)
+                ScrubbableBlur(fraction: backdrop.blur * pow(visible, 0.75))
+                if backdrop.glass != .none {
+                    // LiquidGlassKit draws the glass on iOS 26 and later; the clear fallback leaves the blur alone.
+                    let glass: LiquidGlass = backdrop.glass == .regular ? .regular : .clear
+                    Color.clear
+                        .liquidGlassEffect(glass.interactive(false), in: Rectangle(), fallback: Color.clear)
+                        .opacity(visible)
+                }
+                Color.black.opacity(backdrop.dimming * visible)
             }
         }
         .ignoresSafeArea()
@@ -117,11 +125,12 @@ private struct ScrubbableBlur: UIViewRepresentable {
     static func dismantleUIView(_ view: ScrubbableBlurView, coordinator: ()) { view.tearDown() }
 }
 
-/// Scrubs a live blur while the presentation moves, and settles into a plain `UIBlurEffect` at rest.
+/// Scrubs a live blur while the presentation moves, and settles at rest: into a plain `UIBlurEffect` at full
+/// strength, or, for a partial blur, by finishing the animator where it stands, which keeps that radius.
 ///
 /// A paused animator leaves a frozen animation on the layer. Keeping one for the whole time the center is open
-/// would stop the app from ever reporting idle (UI tests wait forever) and keeps an animation in flight, so the
-/// animator only exists while the value is changing.
+/// would stop the app from ever reporting idle (UI tests then wait 60 seconds before every action) and keeps an
+/// animation in flight, so the animator only exists while the value is changing.
 final class ScrubbableBlurView: UIView {
     private let effectView = UIVisualEffectView(effect: nil)
     private var animator: UIViewPropertyAnimator?
@@ -130,6 +139,11 @@ final class ScrubbableBlurView: UIView {
     /// True when the current animator runs from blurred to clear, i.e. it was built while resting blurred.
     private var inverted = false
     private var settleToken = 0
+    /// The blur fraction shown while no animator exists; nil when unknown, which forces a rebuild.
+    private var resting: CGFloat? = 0
+
+    /// True while an animator is scrubbing the blur; false once it has settled.
+    var isScrubbing: Bool { animator != nil }
 
     var fraction: Double = 0 {
         didSet { apply() }
@@ -149,6 +163,7 @@ final class ScrubbableBlurView: UIView {
             MainActor.assumeIsolated {
                 guard let self, self.animator != nil else { return }
                 self.stop()
+                self.resting = nil
                 self.apply()
             }
         }
@@ -159,6 +174,7 @@ final class ScrubbableBlurView: UIView {
         super.didMoveToWindow()
         stop()
         effectView.effect = nil
+        resting = 0
         apply()
     }
 
@@ -189,15 +205,15 @@ final class ScrubbableBlurView: UIView {
         }
     }
 
-    /// True when the static effect already matches the requested end state.
-    private var isSettled: Bool {
-        (target <= 0.001 && effectView.effect == nil) || (target >= 0.999 && effectView.effect != nil)
-    }
+    /// True when the settled blur already matches the requested one.
+    private var isSettled: Bool { resting.map { abs(target - $0) <= 0.001 } ?? false }
 
     private var animatorFraction: CGFloat { inverted ? 1 - target : target }
 
     /// Animates away from the committed effect. Resetting the effect and animating it back within one run-loop
-    /// turn would coalesce into no change, leaving the animator scrubbing nothing.
+    /// turn would coalesce into no change, leaving the animator scrubbing nothing. After resting at a partial blur
+    /// the committed effect is still none or the full blur, and a new animator starts from that rather than from the
+    /// frozen radius, so `animatorFraction` keeps mapping to the same strengths (verified on iOS 27).
     private func rebuild() {
         inverted = effectView.effect != nil
         let animator = UIViewPropertyAnimator(duration: 1, curve: .linear) { [effectView, inverted] in
@@ -215,10 +231,14 @@ final class ScrubbableBlurView: UIView {
             MainActor.assumeIsolated {
                 guard let self, self.settleToken == token, let animator = self.animator else { return }
                 let value = self.target
-                guard value <= 0.001 || value >= 0.999 else { return }
-                let blurred = value >= 0.999
                 animator.stopAnimation(false)
-                animator.finishAnimation(at: blurred != self.inverted ? .end : .start)
+                if value <= 0.001 || value >= 0.999 {
+                    animator.finishAnimation(at: (value >= 0.999) != self.inverted ? .end : .start)
+                    self.resting = value >= 0.999 ? 1 : 0
+                } else {
+                    animator.finishAnimation(at: .current)
+                    self.resting = value
+                }
                 self.animator = nil
             }
         }

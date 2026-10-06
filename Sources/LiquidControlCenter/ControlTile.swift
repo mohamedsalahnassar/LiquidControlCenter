@@ -91,7 +91,13 @@ public struct ControlCenterConfiguration: Sendable {
     public var maximumWidth: CGFloat = 430
     public var title: String = "Control Center"
     public var motion: ControlCenterMotion = .default
-    public var dimmingOpacity: Double = 0.22
+    /// How the app behind the center is blurred, glazed, and dimmed.
+    public var backdrop: ControlCenterBackdrop = .liquidGlass
+    @available(*, deprecated, message: "Use backdrop.dimming.")
+    public var dimmingOpacity: Double {
+        get { backdrop.dimming }
+        set { backdrop.dimming = newValue }
+    }
     public var dismissOnBackgroundTap: Bool = true
     /// Swipe up anywhere outside an interactive control to dismiss, tracking the finger.
     public var allowsInteractiveDismissal: Bool = true

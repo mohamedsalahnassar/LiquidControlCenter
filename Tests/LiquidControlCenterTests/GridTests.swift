@@ -316,6 +316,23 @@ struct MotionTests {
     }
 }
 
+struct BackdropTests {
+    @Test func presetsAndDefault() {
+        #expect(ControlCenterBackdrop() == .liquidGlass)
+        #expect(ControlCenterBackdrop.liquidGlass == .init(blur: 0.45, glass: .clear, dimming: 0.12))
+        #expect(ControlCenterBackdrop.translucent == .init(blur: 0.45, glass: .none, dimming: 0.15))
+        #expect(ControlCenterBackdrop.standard == .init(blur: 1, glass: .none, dimming: 0.22))
+    }
+
+    @Test func validationClampsAndReplacesInvalidValues() {
+        let high = ControlCenterBackdrop(blur: 3, glass: .regular, dimming: 2).validated
+        #expect(high == .init(blur: 1, glass: .regular, dimming: 0.85))
+        #expect(ControlCenterBackdrop(blur: -1, dimming: -1).validated == .init(blur: 0, dimming: 0))
+        let invalid = ControlCenterBackdrop(blur: .nan, glass: .none, dimming: .infinity).validated
+        #expect(invalid == .init(blur: 0.45, glass: .none, dimming: 0.12))
+    }
+}
+
 struct RobustnessTests {
     @Test func persistedLayoutValidatesDecodedValues() throws {
         let decoder = JSONDecoder()
@@ -332,6 +349,31 @@ struct RobustnessTests {
 }
 
 #if os(iOS)
+import UIKit
+
+@MainActor
+struct BackdropBlurTests {
+    @Test func configurationDefaultsToLiquidGlass() {
+        #expect(ControlCenterConfiguration().backdrop == .liquidGlass)
+    }
+
+    /// A paused animator left on the blur keeps the app from reporting idle, and UI tests then wait 60 seconds
+    /// before every action. Every resting strength, partial ones included, has to settle without one.
+    @Test func blurSettlesWithoutAPausedAnimator() async throws {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 120, height: 120))
+        let blur = ScrubbableBlurView(frame: window.bounds)
+        window.addSubview(blur)
+        defer { blur.tearDown() }
+        for fraction in [0.45, 1, 0.2, 0] {
+            blur.fraction = fraction
+            try await Task.sleep(for: .milliseconds(60))
+            #expect(blur.isScrubbing, "scrubbing toward \(fraction)")
+            try await Task.sleep(for: .milliseconds(400))
+            #expect(!blur.isScrubbing, "settled at \(fraction)")
+        }
+    }
+}
+
 struct TileAPITests {
     @Test @MainActor func builderSupportsConditionsLoopsAndArrays() {
         @ControlCenterBuilder func controls(show: Bool) -> [ControlTile] {
