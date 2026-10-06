@@ -13,9 +13,7 @@ let package = Package(
                  revision: "c1dd2276164446c1df417f96984749ab8e6d465a")
     ],
     targets: [
-        .target(name: "LiquidControlCenter",
-                dependencies: [.product(name: "LiquidGlassKit", package: "LiquidGlassKit",
-                                        condition: .when(platforms: [.iOS]))]),
+        .target(name: "LiquidControlCenter", dependencies: ["LiquidGlassKit"]),
         .testTarget(name: "LiquidControlCenterTests", dependencies: ["LiquidControlCenter"])
     ],
     swiftLanguageModes: [.v6]

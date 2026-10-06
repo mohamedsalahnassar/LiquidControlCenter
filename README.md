@@ -14,7 +14,7 @@ For a physical device, choose your development team and override `CODE_SIGNING_A
 
 ## Integrate
 
-Add the package with Swift Package Manager (or the included `LiquidControlCenter.podspec` for CocoaPods-based hosts such as React Native), then link the **LiquidControlCenter** product. No app delegate, global window, screen wrapper, or custom navigation container is required.
+Add the package with Swift Package Manager, then link the **LiquidControlCenter** product. No app delegate, global window, screen wrapper, or custom navigation container is required.
 
 ```swift
 import SwiftUI
@@ -162,7 +162,7 @@ Reduce Motion replaces spatial transitions with fades. Reduce Transparency uses 
 - **Glass:** tiles and the center's own controls are drawn by [LiquidGlassKit](https://github.com/mohamedsalahnassar/LiquidGlassKit): native Liquid Glass on iOS 26 and later, its material fallback on iOS 16–25. Native glass is tinted only when a tile sets `tint` and has no outline, so it follows the system's own glass appearance, which iOS 26.4 renders darker than iOS 27. The material fallback carries the tile's tint and a hairline rim. `forceFallback` exercises the material path on modern systems. `forceReducedMotion` and `forceReducedTransparency` enable those treatments without changing users' system preferences.
 - **Toolchain:** Swift 6.3 or later, because LiquidGlassKit's manifest requires it. This package's own manifest declares tools version 6.0.
 - **Dependencies:** LiquidGlassKit, pinned to revision `c1dd227…` because upstream has no release tags. Replace the revision with a version tag before publishing a semantic-version release of this package.
-- **Package managers:** Swift Package Manager, plus a podspec for CocoaPods-based cross-platform hosts. LiquidGlassKit has no pod, so CocoaPods builds make the same native-or-material choice directly (see `GlassSurface.swift`) and look the same.
+- **Package manager:** Swift Package Manager only.
 
 The macOS platform declaration supports running the pure layout and motion unit tests with `swift test`. The presentation UI is iOS-only.
 

@@ -5,7 +5,7 @@
 - [Apple: Use and customize Control Center, iOS 26](https://support.apple.com/guide/iphone/use-and-customize-control-center-iph59095ec58/ios): four-column mixed-span grid, circular buttons, large rounded groups, vertical sliders, hold-to-expand, bottom-edge dismissal, group navigation.
 - [Apple: Meet Liquid Glass, WWDC25 session 219](https://developer.apple.com/videos/play/wwdc2025/219/): Dynamics chapter at 1:29; Adaptivity at 6:00. Primary motion and material reference.
 - [Apple: Applying Liquid Glass to custom views](https://developer.apple.com/documentation/swiftui/applying-liquid-glass-to-custom-views): glass containers and native effect composition.
-- [LiquidGlassKit source](https://github.com/mohamedsalahnassar/LiquidGlassKit/blob/c1dd2276164446c1df417f96984749ab8e6d465a/Sources/LiquidGlassKit/LiquidGlassKit.swift): the glass layer for tiles and controls: native glass on iOS 26, material before. Pinned at that revision; its manifest requires Swift tools 6.3. It was briefly inlined into `GlassSurface.swift` and is a dependency again. CocoaPods builds, which cannot get it, make the same choice in `GlassSurface.swift`.
+- [LiquidGlassKit source](https://github.com/mohamedsalahnassar/LiquidGlassKit/blob/c1dd2276164446c1df417f96984749ab8e6d465a/Sources/LiquidGlassKit/LiquidGlassKit.swift): the glass layer for tiles and controls: native glass on iOS 26, material before. Pinned at that revision; its manifest requires Swift tools 6.3. It was briefly inlined into `GlassSurface.swift` and is a dependency again.
 
 Reference media is held locally in ignored `.artifacts/references`, not redistributed with the library.
 
