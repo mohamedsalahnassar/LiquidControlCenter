@@ -2,7 +2,7 @@
 
 An app-owned Control Center with live full-screen blur, Liquid Glass surfaces, mixed-size grids, expanding controls, and finger-tracking presentation. Inspired by iOS 26 and tuned against frame-by-frame screen recordings.
 
-**iOS 16+ · Xcode 16+ (Swift 6.0) · SwiftUI and UIKit · No dependencies · Public APIs**
+**iOS 16+ · Swift 6.3+ · SwiftUI and UIKit · Glass by LiquidGlassKit · Public APIs**
 
 ## Try the sample
 
@@ -159,10 +159,10 @@ Reduce Motion replaces spatial transitions with fades. Reduce Transparency uses 
 ### Compatibility
 
 - **OS:** iOS 16 and later, iPhone and iPad, all orientations. iOS 16 uses timed animation completions in place of the iOS 17 completion API.
-- **Glass:** on iOS 26 and later, tiles use native Liquid Glass inside a `GlassEffectContainer`. Earlier systems use materials. `forceFallback` exercises the material path on modern systems. `forceReducedMotion` and `forceReducedTransparency` enable those treatments without changing users' system preferences.
-- **Toolchain:** Xcode 16 or later (Swift tools 6.0). The native glass calls are compiled only by toolchains that ship the iOS 26 SDK, so older Xcode versions build the material path.
-- **Dependencies:** none. The package previously depended on LiquidGlassKit, whose manifest required Swift tools 6.3. That forced every consumer onto the newest Xcode.
-- **Package managers:** Swift Package Manager, plus a podspec for CocoaPods-based cross-platform hosts.
+- **Glass:** tiles and the center's own controls are drawn by [LiquidGlassKit](https://github.com/mohamedsalahnassar/LiquidGlassKit): native Liquid Glass on iOS 26 and later, its material fallback on iOS 16–25. Native glass is tinted only when a tile sets `tint` and has no outline, so it follows the system's own glass appearance, which iOS 26.4 renders darker than iOS 27. The material fallback carries the tile's tint and a hairline rim. `forceFallback` exercises the material path on modern systems. `forceReducedMotion` and `forceReducedTransparency` enable those treatments without changing users' system preferences.
+- **Toolchain:** Swift 6.3 or later, because LiquidGlassKit's manifest requires it. This package's own manifest declares tools version 6.0.
+- **Dependencies:** LiquidGlassKit, pinned to revision `c1dd227…` because upstream has no release tags. Replace the revision with a version tag before publishing a semantic-version release of this package.
+- **Package managers:** Swift Package Manager, plus a podspec for CocoaPods-based cross-platform hosts. LiquidGlassKit has no pod, so CocoaPods builds make the same native-or-material choice directly (see `GlassSurface.swift`) and look the same.
 
 The macOS platform declaration supports running the pure layout and motion unit tests with `swift test`. The presentation UI is iOS-only.
 
