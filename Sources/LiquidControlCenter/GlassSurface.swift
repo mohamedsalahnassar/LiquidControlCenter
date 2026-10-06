@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import UIKit
+import LiquidGlassKit
 
 extension EnvironmentValues {
     @Entry var controlCenterReduceTransparency = false
@@ -8,8 +9,12 @@ extension EnvironmentValues {
     @Entry var controlCenterFallback = false
 }
 
-/// Native Liquid Glass on iOS 26+, a material fallback before that (or when forced).
-/// The availability check is compiled only by toolchains that ship the iOS 26 SDK, so older Xcode versions still build.
+/// Glass for tiles and the center's own controls. Every surface is drawn by LiquidGlassKit: native Liquid Glass on
+/// iOS 26 and later, its material fallback before that.
+///
+/// Native glass takes the control's tint itself, lights its own edges, and is otherwise left clear: a default white
+/// tint or an outline flattens it into frosted plastic. The kit's fallback is a single material, which can do neither,
+/// so the tint is layered behind it and a hairline rim is added.
 struct GlassSurface: ViewModifier {
     var radius: CGFloat
     var tint: Color?
@@ -23,26 +28,41 @@ struct GlassSurface: ViewModifier {
         Group {
             if reduceTransparency || forceOpaque {
                 content.background(tint ?? Color(white: 0.22), in: shape)
-            } else if !forceFallback, let glass = nativeGlass(content, shape: shape) {
-                glass
+            } else if forceFallback {
+                // On iOS the kit's background effect always draws its fallback (the native one is visionOS-only), so
+                // this previews exactly what iOS 16–25 get.
+                content.liquidGlassBackgroundEffect(LiquidGlass.regular, in: shape, fallback: Self.fallback)
+                    .background { materialTint(shape) }
             } else {
-                content.background(.ultraThinMaterial, in: shape)
-                    .background((tint ?? .clear).opacity(0.35), in: shape)
+                content.liquidGlassEffect(.regular.tint(tint).interactive(false), in: shape, fallback: Self.fallback)
+                    .background { materialTint(shape) }
             }
         }
         .overlay {
-            shape.strokeBorder(.white.opacity(contrast == .increased ? 0.65 : 0.18), lineWidth: 0.75)
+            shape.strokeBorder(.white.opacity(rimOpacity), lineWidth: 0.75)
                 .allowsHitTesting(false)
         }
     }
 
-    private func nativeGlass(_ content: Content, shape: some Shape) -> AnyView? {
-        #if compiler(>=6.2)
-        if #available(iOS 26.0, *) {
-            return AnyView(content.glassEffect(.regular.tint(tint ?? .white.opacity(0.12)).interactive(false), in: shape))
-        }
-        #endif
-        return nil
+    /// A material cannot carry a tint, so the control's tint sits behind it. Native glass is tinted directly.
+    @ViewBuilder
+    private func materialTint(_ shape: some Shape) -> some View {
+        if drawsMaterial, let tint { shape.fill(tint.opacity(0.35)) }
+    }
+
+    /// Native glass lights its own edges; the material and opaque surfaces need a rim. Increase Contrast always gets one.
+    private var rimOpacity: Double {
+        if contrast == .increased { return 0.65 }
+        return drawsMaterial || reduceTransparency || forceOpaque ? 0.18 : 0
+    }
+
+    private var drawsMaterial: Bool { forceFallback || !Self.nativeGlass }
+
+    private static let fallback = Material.ultraThinMaterial
+
+    /// Mirrors the kit's own switch: native glass from iOS 26, its fallback below that.
+    private static var nativeGlass: Bool {
+        if #available(iOS 26.0, *) { return true } else { return false }
     }
 }
 
